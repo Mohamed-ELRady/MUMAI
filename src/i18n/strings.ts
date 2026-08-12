@@ -18,10 +18,13 @@ const strings = {
   childNamePlaceholder: { ar: 'مثلاً: يوسف', en: 'e.g. Youssef' },
   birthDateLabel: { ar: 'تاريخ الميلاد', en: 'Date of birth' },
   startTrackingCta: { ar: 'ابدئي المتابعة', en: 'Start tracking' },
+  saveChangesCta: { ar: 'حفظ التعديلات', en: 'Save changes' },
+  editProfileTitle: { ar: 'تعديل بيانات الطفل', en: "Edit child's info" },
   defaultChildName: { ar: 'طفلي', en: 'my child' },
 
   // Home
   trackingGrowthOf: { ar: 'متابعة نمو', en: "Tracking" },
+  editProfileButton: { ar: 'تعديل', en: 'Edit' },
   currentAgeLabel: { ar: 'العمر الحالي:', en: 'Current age:' },
   chatBanner: {
     ar: 'عندك سؤال عن مرحلة نمو معينة؟ اسألي المساعدة 💬',

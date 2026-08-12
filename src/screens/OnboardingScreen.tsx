@@ -81,22 +81,26 @@ function NativeDatePicker({
   );
 }
 
-export default function OnboardingScreen({ navigation }: Props) {
-  const { setProfile } = useAppStore();
+export default function OnboardingScreen({ navigation, route }: Props) {
+  const { profile, setProfile } = useAppStore();
   const { t, isRTL } = useLanguage();
-  const [name, setName] = useState('');
-  const [birthDate, setBirthDate] = useState<Date>(new Date());
+  const isEditing = !!route.params?.isEditing;
+  const [name, setName] = useState(isEditing ? profile?.name ?? '' : '');
+  const [birthDate, setBirthDate] = useState<Date>(
+    isEditing && profile ? new Date(profile.birthDateISO) : new Date()
+  );
   const textAlign = isRTL ? 'right' : 'left';
 
   function handleContinue() {
     setProfile({ name: name.trim() || t('defaultChildName'), birthDateISO: birthDate.toISOString() });
-    navigation.replace('Home');
+    if (isEditing) navigation.goBack();
+    else navigation.replace('Home');
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('onboardingTitle')}</Text>
-      <Text style={styles.subtitle}>{t('onboardingSubtitle')}</Text>
+      <Text style={styles.title}>{isEditing ? t('editProfileTitle') : t('onboardingTitle')}</Text>
+      {!isEditing && <Text style={styles.subtitle}>{t('onboardingSubtitle')}</Text>}
 
       <Text style={[styles.label, { textAlign }]}>{t('childNameLabel')}</Text>
       <TextInput
@@ -116,7 +120,7 @@ export default function OnboardingScreen({ navigation }: Props) {
       )}
 
       <Pressable style={styles.cta} onPress={handleContinue}>
-        <Text style={styles.ctaText}>{t('startTrackingCta')}</Text>
+        <Text style={styles.ctaText}>{isEditing ? t('saveChangesCta') : t('startTrackingCta')}</Text>
       </Pressable>
     </View>
   );

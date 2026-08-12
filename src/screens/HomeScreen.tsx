@@ -26,13 +26,18 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.greeting, { textAlign }]}>
-          {t('trackingGrowthOf')} {profile.name}
-        </Text>
-        <Text style={[styles.ageText, { textAlign }]}>
-          {t('currentAgeLabel')} {formatAge(ageMonths, lang)}
-        </Text>
+      <View style={[styles.header, { flexDirection: rowDir, alignItems: 'center' }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.greeting, { textAlign }]}>
+            {t('trackingGrowthOf')} {profile.name}
+          </Text>
+          <Text style={[styles.ageText, { textAlign }]}>
+            {t('currentAgeLabel')} {formatAge(ageMonths, lang)}
+          </Text>
+        </View>
+        <Pressable onPress={() => navigation.navigate('Onboarding', { isEditing: true })} hitSlop={8}>
+          <Text style={styles.editButtonText}>{t('editProfileButton')}</Text>
+        </Pressable>
       </View>
 
       <Pressable style={styles.chatBanner} onPress={() => navigation.navigate('Chat', { stageId: currentStage.id })}>
@@ -89,6 +94,7 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing.md },
   greeting: { fontSize: 22, fontWeight: '700', color: colors.text },
   ageText: { fontSize: 15, color: colors.textMuted, marginTop: spacing.xs },
+  editButtonText: { color: colors.primaryDark, fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
   chatBanner: {
     backgroundColor: colors.chipBg,
     borderRadius: radii.md,

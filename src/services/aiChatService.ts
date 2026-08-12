@@ -23,6 +23,10 @@ function tr(key: keyof typeof strings, lang: Lang, vars?: Record<string, string 
   return text;
 }
 
+// أقل درجة تخلي المطابقة "موثوقة" — لازم تطابق كلمة معنى كاملة على الأقل مش بس تشابه سطحي
+// (زي اسم المجال المشترك بين عشرات العناصر)، عشان محدش يطلع كرد "عشوائي" مش مرتبط بالسؤال فعليًا.
+const MIN_CONFIDENT_SCORE = 1;
+
 function nearbyStages(currentStageId: string): string[] {
   const idx = stageIndex(currentStageId);
   const ids = AGE_STAGES.slice(Math.max(0, idx - 1), idx + 2).map((s) => s.id);
@@ -34,9 +38,10 @@ function findRelevantRedFlags(query: string, ctx: ChatContext): RedFlag[] {
   const scored = pool
     .map((rf) => ({
       rf,
-      score: overlapScore(query, `${rf.warningSign[ctx.lang]} ${DOMAIN_LABELS[rf.domain][ctx.lang]}`, ctx.lang),
+      // اسم المجال بوزن أقل (تعتيم) عشان لوحده منعتبروش تطابق كافي
+      score: overlapScore(query, rf.warningSign[ctx.lang], ctx.lang) + 0.3 * overlapScore(query, DOMAIN_LABELS[rf.domain][ctx.lang], ctx.lang),
     }))
-    .filter((x) => x.score > 0)
+    .filter((x) => x.score >= MIN_CONFIDENT_SCORE)
     .sort((a, b) => b.score - a.score);
   return scored.slice(0, 2).map((x) => x.rf);
 }
@@ -46,9 +51,9 @@ function findRelevantMilestones(query: string, ctx: ChatContext): Milestone[] {
   const scored = pool
     .map((m) => ({
       m,
-      score: overlapScore(query, `${m.title[ctx.lang]} ${DOMAIN_LABELS[m.domain][ctx.lang]}`, ctx.lang),
+      score: overlapScore(query, m.title[ctx.lang], ctx.lang) + 0.3 * overlapScore(query, DOMAIN_LABELS[m.domain][ctx.lang], ctx.lang),
     }))
-    .filter((x) => x.score > 0)
+    .filter((x) => x.score >= MIN_CONFIDENT_SCORE)
     .sort((a, b) => b.score - a.score);
   return scored.slice(0, 3).map((x) => x.m);
 }

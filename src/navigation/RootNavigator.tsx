@@ -38,7 +38,14 @@ export default function RootNavigator() {
           headerRight: () => <LanguageToggleButton />,
         }}
       >
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={({ route }) => ({
+            headerShown: !!route.params?.isEditing,
+            title: t('editProfileTitle'),
+          })}
+        />
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: t('appName') }} />
         <Stack.Screen name="StageDetail" component={StageDetailScreen} options={{ title: t('stageDetailTitle') }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('chatTitle') }} />
