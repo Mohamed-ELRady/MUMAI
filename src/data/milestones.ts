@@ -220,6 +220,40 @@ export const RED_FLAGS: RedFlag[] = [
     },
   },
   {
+    id: 'rf-m4-1',
+    ageStageId: 'm4',
+    domain: 'gross_motor',
+    warningSign: { ar: 'لا يستطيع تثبيت رأسه عند حمله', en: "Can't hold his head steady when picked up" },
+    possibleCauses: [
+      { ar: 'تفاوت طبيعي محتاج وقت أطول', en: 'Natural variation needing more time' },
+      { ar: 'ضعف عضلي', en: 'Muscle weakness' },
+      { ar: 'مشكلة عصبية عضلية نادرة', en: 'A rare neuromuscular issue' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'طبيب أطفال / أخصائي علاج طبيعي للأطفال', en: 'Pediatrician / pediatric physical therapist' },
+    notes: {
+      ar: 'عادة بيتقيّم في الفحص الدوري القادم لو مفيش علامات تانية مصاحبة.',
+      en: 'This is usually assessed at the next routine checkup if not accompanied by other signs.',
+    },
+  },
+  {
+    id: 'rf-m4-2',
+    ageStageId: 'm4',
+    domain: 'cognitive',
+    warningSign: { ar: 'لا يتابع الأشياء المتحركة بعينيه إطلاقًا', en: "Doesn't track moving objects with his eyes at all" },
+    possibleCauses: [
+      { ar: 'مشكلة بصرية تحتاج فحص', en: 'A vision problem needing a check-up' },
+      { ar: 'تأخر بسيط في التطور البصري', en: 'A mild delay in visual development' },
+      { ar: 'يحتاج وقتًا أطول للتركيز', en: 'Needs more time to focus' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'طبيب عيون أطفال / طبيب أطفال', en: 'Pediatric ophthalmologist / pediatrician' },
+    notes: {
+      ar: 'فحص النظر المبكر مهم لأن أي مشكلة بصرية غير مكتشفة تؤثر على التطور الحركي والإدراكي لاحقًا.',
+      en: "Early vision screening matters because an undetected vision problem affects motor and cognitive development later on.",
+    },
+  },
+  {
     id: 'rf-m6-1',
     ageStageId: 'm6',
     domain: 'social_emotional',
@@ -251,6 +285,23 @@ export const RED_FLAGS: RedFlag[] = [
     notes: {
       ar: 'إذا كان الطفل خديجًا يُحسب عمره المعدّل (Corrected age) وليس عمره الفعلي عند تقييم المراحل.',
       en: 'If the child was premature, use the corrected age rather than the actual age when assessing milestones.',
+    },
+  },
+  {
+    id: 'rf-m6-3',
+    ageStageId: 'm6',
+    domain: 'cognitive',
+    warningSign: { ar: 'لا يحاول الوصول للأشياء القريبة منه', en: "Doesn't try to reach for nearby objects" },
+    possibleCauses: [
+      { ar: 'تفاوت طبيعي بين الأطفال', en: 'Natural variation between children' },
+      { ar: 'ضعف بصري أو حركي', en: 'A vision or motor problem' },
+      { ar: 'تأخر إدراكي مبكر', en: 'An early cognitive delay' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'طبيب أطفال', en: 'Pediatrician' },
+    notes: {
+      ar: 'الوصول للأشياء علامة مبكرة على التناسق بين البصر والحركة.',
+      en: 'Reaching for objects is an early sign of hand-eye coordination.',
     },
   },
   {
@@ -322,6 +373,57 @@ export const RED_FLAGS: RedFlag[] = [
     },
   },
   {
+    id: 'rf-m12-3',
+    ageStageId: 'm12',
+    domain: 'social_emotional',
+    warningSign: { ar: 'لا يلعب أي لعبة تفاعلية ولا يقلد حركات بسيطة', en: "Doesn't play any interactive game and doesn't imitate simple actions" },
+    possibleCauses: [
+      { ar: 'تفاوت طبيعي', en: 'Natural variation' },
+      { ar: 'قلة فرص التفاعل', en: 'Limited opportunities for interaction' },
+      { ar: 'مؤشر يستدعي تقييمًا ضمن طيف التوحد', en: 'A sign warranting evaluation within the autism spectrum' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'طبيب أطفال / أخصائي نمو أطفال', en: 'Pediatrician / child development specialist' },
+    notes: {
+      ar: 'التقليد المبكر أساس مهم لتعلم اللغة والمهارات الاجتماعية لاحقًا.',
+      en: 'Early imitation is an important foundation for later language and social skills.',
+    },
+  },
+  {
+    id: 'rf-m15-1',
+    ageStageId: 'm15',
+    domain: 'language',
+    warningSign: { ar: 'لا يقول أي كلمة مفردة حتى الآن', en: "Doesn't say any single word yet" },
+    possibleCauses: [
+      { ar: 'تأخر لغوي شائع ويُستدرك غالبًا', en: 'A common language delay that often catches up' },
+      { ar: 'ضعف سمع', en: 'Hearing loss' },
+      { ar: 'تأخر نمائي أوسع', en: 'A broader developmental delay' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'أخصائي تخاطب + طبيب أطفال', en: 'Speech-language therapist + pediatrician' },
+    notes: {
+      ar: 'لو مصحوب بغياب الإشارة أو التواصل بالعين، يستحق تقييمًا أشمل بدون تأخير.',
+      en: 'If accompanied by an absence of pointing or eye contact, it warrants a broader evaluation without delay.',
+    },
+  },
+  {
+    id: 'rf-m15-2',
+    ageStageId: 'm15',
+    domain: 'social_emotional',
+    warningSign: { ar: 'لا يشير للأشياء ولا يظهر اهتمامًا بمشاركة الآخرين ما يعجبه', en: "Doesn't point to things or show interest in sharing what interests him with others" },
+    possibleCauses: [
+      { ar: 'فروق فردية في الطباع', en: 'Individual temperament differences' },
+      { ar: 'تأخر لغوي مصاحب', en: 'An accompanying language delay' },
+      { ar: 'مؤشر يستدعي تقييمًا ضمن طيف التوحد', en: 'A sign warranting evaluation within the autism spectrum' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'طبيب أطفال / أخصائي نمو أطفال', en: 'Pediatrician / child development specialist' },
+    notes: {
+      ar: 'الإشارة المشتركة (joint attention) من أهم علامات التواصل الاجتماعي المبكر.',
+      en: 'Joint attention (shared pointing) is one of the most important early social communication signs.',
+    },
+  },
+  {
     id: 'rf-m18-1',
     ageStageId: 'm18',
     domain: 'language',
@@ -390,6 +492,40 @@ export const RED_FLAGS: RedFlag[] = [
     },
   },
   {
+    id: 'rf-m30-1',
+    ageStageId: 'm30',
+    domain: 'language',
+    warningSign: { ar: 'مفرداته لسه قليلة جدًا ومش بتزيد بمرور الوقت', en: "Vocabulary is still very limited and isn't growing over time" },
+    possibleCauses: [
+      { ar: 'تأخر لغوي يحتاج متابعة', en: 'A language delay needing follow-up' },
+      { ar: 'ضعف سمعي غير مكتشف', en: 'Undetected hearing loss' },
+      { ar: 'بيئة بها تحفيز لغوي محدود', en: 'An environment with limited language stimulation' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'أخصائي تخاطب + طبيب أطفال', en: 'Speech-language therapist + pediatrician' },
+    notes: {
+      ar: 'نمو المفردات المستمر مهم أكتر من العدد المطلق في هذا العمر.',
+      en: 'Continued vocabulary growth matters more than the exact word count at this age.',
+    },
+  },
+  {
+    id: 'rf-m30-2',
+    ageStageId: 'm30',
+    domain: 'fine_motor',
+    warningSign: { ar: 'لا يستطيع بناء برج بسيط من مكعبات أو مسك القلم إطلاقًا', en: "Can't stack a simple block tower or hold a pen at all" },
+    possibleCauses: [
+      { ar: 'تفاوت طبيعي محتاج تمرين أكتر', en: 'Natural variation needing more practice' },
+      { ar: 'ضعف في التناسق الحركي الدقيق', en: 'Weakness in fine motor coordination' },
+      { ar: 'تأخر نمائي أوسع', en: 'A broader developmental delay' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'طبيب أطفال / أخصائي علاج وظيفي', en: 'Pediatrician / occupational therapist' },
+    notes: {
+      ar: 'التآزر بين اليد والعين بيتطور تدريجيًا؛ الفحص مفيد لو مصحوب بتأخر في مجالات تانية.',
+      en: 'Hand-eye coordination develops gradually; evaluation is useful if accompanied by delay in other areas.',
+    },
+  },
+  {
     id: 'rf-y3-1',
     ageStageId: 'y3',
     domain: 'language',
@@ -441,6 +577,23 @@ export const RED_FLAGS: RedFlag[] = [
     },
   },
   {
+    id: 'rf-y4-2',
+    ageStageId: 'y4',
+    domain: 'language',
+    warningSign: { ar: 'كلامه غير مفهوم لغرباء ولا يحكي جملة من 4 كلمات', en: "Speech isn't understood by strangers and he doesn't form 4-word sentences" },
+    possibleCauses: [
+      { ar: 'اضطراب نطق يحتاج متابعة', en: 'An articulation disorder needing follow-up' },
+      { ar: 'تأخر لغوي أوسع', en: 'A broader language delay' },
+      { ar: 'ضعف سمعي بسيط غير مكتشف', en: 'Mild undetected hearing loss' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'أخصائي تخاطب', en: 'Speech-language therapist' },
+    notes: {
+      ar: 'الوضوح المتوقع في هذا العمر إن يفهمه معظم الغرباء تقريبًا.',
+      en: 'By this age, speech is expected to be understood by most strangers.',
+    },
+  },
+  {
     id: 'rf-y5-1',
     ageStageId: 'y5',
     domain: 'cognitive',
@@ -455,6 +608,23 @@ export const RED_FLAGS: RedFlag[] = [
     notes: {
       ar: 'هذا العمر مهم للتقييم قبل دخول المدرسة لضمان دعم أي احتياج مبكرًا.',
       en: 'This age is important for pre-school evaluation to ensure any needs are supported early.',
+    },
+  },
+  {
+    id: 'rf-y5-2',
+    ageStageId: 'y5',
+    domain: 'social_emotional',
+    warningSign: { ar: 'لا يتفاعل مع أطفال آخرين ولا يشارك في لعب تخيلي بسيط', en: "Doesn't interact with other children and doesn't engage in simple pretend play" },
+    possibleCauses: [
+      { ar: 'طبع خجول طبيعي', en: 'A naturally shy temperament' },
+      { ar: 'صعوبة اجتماعية تستحق تقييمًا', en: 'A social difficulty worth evaluating' },
+      { ar: 'مؤشر ضمن طيف التوحد', en: 'A sign within the autism spectrum' },
+    ],
+    severity: 'needs_evaluation',
+    specialist: { ar: 'أخصائي نمو أطفال / طبيب نفسي أطفال', en: 'Child development specialist / child psychologist' },
+    notes: {
+      ar: 'الاستعداد الاجتماعي مهم قبل دخول المدرسة، وده وقت مناسب للتقييم لو فيه قلق حقيقي.',
+      en: 'Social readiness matters before school, and this is a good time to evaluate if there is a real concern.',
     },
   },
 ];

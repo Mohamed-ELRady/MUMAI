@@ -52,11 +52,19 @@ export default function HomeScreen({ navigation }: Props) {
 
           return (
             <Pressable
-              style={[styles.stageCard, { flexDirection: rowDir }, isCurrent && styles.stageCardCurrent]}
-              onPress={() => navigation.navigate('StageDetail', { stageId: item.id })}
+              disabled={isFuture}
+              style={[
+                styles.stageCard,
+                { flexDirection: rowDir },
+                isCurrent && styles.stageCardCurrent,
+                isFuture && styles.stageCardDisabled,
+              ]}
+              onPress={() => !isFuture && navigation.navigate('StageDetail', { stageId: item.id })}
             >
               <View style={{ flex: 1 }}>
-                <Text style={[styles.stageLabel, { textAlign }]}>{pick(item.label)}</Text>
+                <Text style={[styles.stageLabel, { textAlign }, isFuture && styles.stageLabelDisabled]}>
+                  {pick(item.label)}
+                </Text>
                 <Text style={[styles.stageProgress, { textAlign }]}>
                   {doneCount}/{stageMilestones.length} {t('skillsUnit')}
                   {isFuture ? ` · ${t('notDueYet')}` : ''}
@@ -98,7 +106,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stageCardCurrent: { borderColor: colors.primary, borderWidth: 2 },
+  stageCardDisabled: { opacity: 0.5 },
   stageLabel: { fontSize: 16, fontWeight: '700', color: colors.text },
+  stageLabelDisabled: { color: colors.textMuted },
   stageProgress: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   currentBadge: { backgroundColor: colors.primary, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 4, marginHorizontal: spacing.sm },
   currentBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
