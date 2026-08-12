@@ -28,7 +28,7 @@ const strings = {
     en: 'Have a question about a specific stage? Ask the assistant 💬',
   },
   skillsUnit: { ar: 'مهارة', en: 'skills' },
-  notDueYet: { ar: 'لسه معجاش وقتها', en: 'Not due yet' },
+  notDueYet: { ar: 'لسه مجاش وقتها', en: 'Not due yet' },
   currentStageBadge: { ar: 'المرحلة الحالية', en: 'Current stage' },
 
   // Stage detail
