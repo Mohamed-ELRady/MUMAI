@@ -13,7 +13,7 @@ const DOMAIN_ORDER: Domain[] = ['gross_motor', 'fine_motor', 'language', 'social
 
 export default function StageDetailScreen({ route, navigation }: Props) {
   const { stageId } = route.params;
-  const stage = AGE_STAGES.find((s) => s.id === stageId)!;
+  const stage = AGE_STAGES.find((s) => s.id === stageId);
   const { completedMilestoneIds, toggleMilestone } = useAppStore();
   const { t, pick, isRTL } = useLanguage();
   const [showRedFlags, setShowRedFlags] = useState(false);
@@ -33,6 +33,8 @@ export default function StageDetailScreen({ route, navigation }: Props) {
     (m) => m.ageStageId === stageId && !completedMilestoneIds.includes(m.id)
   ).length;
 
+  if (!stage) return <View style={{ padding: spacing.lg }}><Text style={{ textAlign }}>{t('invalidStage')}</Text></View>;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg }}>
       <Text style={[styles.title, { textAlign }]}>{pick(stage.label)}</Text>
@@ -49,6 +51,9 @@ export default function StageDetailScreen({ route, navigation }: Props) {
               return (
                 <Pressable
                   key={m.id}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: done }}
+                  accessibilityLabel={pick(m.title)}
                   style={[styles.milestoneRow, { flexDirection: rowDir }]}
                   onPress={() => toggleMilestone(m.id)}
                 >
@@ -66,7 +71,7 @@ export default function StageDetailScreen({ route, navigation }: Props) {
       })}
 
       {unmetCount > 0 && (
-        <Pressable style={styles.askButton} onPress={() => navigation.navigate('Chat', { stageId })}>
+        <Pressable style={styles.askButton} onPress={() => navigation.navigate('Chat', { stageId, askRemaining: true })}>
           <Text style={styles.askButtonText}>{t('askAboutRemaining', { n: unmetCount })}</Text>
         </Pressable>
       )}

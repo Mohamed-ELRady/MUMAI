@@ -5,7 +5,8 @@ import { RootStackParamList } from '../navigation/types';
 import { useAppStore } from '../store/AppStore';
 import { useLanguage } from '../i18n/LanguageContext';
 import { AGE_STAGES, MILESTONES } from '../data/milestones';
-import { monthsBetween, currentStageForAge, formatAge } from '../data/ageHelpers';
+import { currentStageForAge, formatAge, stageIndex } from '../data/ageHelpers';
+import { useAgeMonths } from '../data/useAgeMonths';
 import { colors, spacing, radii } from '../theme/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -16,10 +17,7 @@ export default function HomeScreen({ navigation }: Props) {
   const textAlign = isRTL ? 'right' : 'left';
   const rowDir = isRTL ? 'row-reverse' : 'row';
 
-  const ageMonths = useMemo(
-    () => (profile ? monthsBetween(profile.birthDateISO, new Date().toISOString()) : 0),
-    [profile]
-  );
+  const ageMonths = useAgeMonths(profile?.birthDateISO);
   const currentStage = useMemo(() => currentStageForAge(ageMonths), [ageMonths]);
 
   if (!profile) return null;
@@ -40,7 +38,7 @@ export default function HomeScreen({ navigation }: Props) {
         </Pressable>
       </View>
 
-      <Pressable style={styles.chatBanner} onPress={() => navigation.navigate('Chat', { stageId: currentStage.id })}>
+      <Pressable accessibilityRole="button" style={styles.chatBanner} onPress={() => navigation.navigate('Chat')}>
         <Text style={[styles.chatBannerText, { textAlign }]}>{t('chatBanner')}</Text>
       </Pressable>
 
@@ -52,7 +50,7 @@ export default function HomeScreen({ navigation }: Props) {
           const stageMilestones = MILESTONES.filter((m) => m.ageStageId === item.id);
           const doneCount = stageMilestones.filter((m) => completedMilestoneIds.includes(m.id)).length;
           const isCurrent = item.id === currentStage.id;
-          const isPast = item.maxMonths <= ageMonths;
+          const isPast = stageIndex(item.id) < stageIndex(currentStage.id);
           const isFuture = item.minMonths > ageMonths;
 
           return (

@@ -1,3 +1,4 @@
+// Reference links and review notes: docs/medical-sources.md
 // بيانات مراحل النمو - مبنية على أطر عالمية معروفة (WHO / CDC "Learn the Signs. Act Early")
 // المحتوى معاد صياغته بالعربية والإنجليزية لأغراض تعليمية وليس بديلاً عن التشخيص الطبي.
 // Growth milestone data — based on well-known global frameworks (WHO / CDC "Learn the Signs. Act Early").
@@ -27,18 +28,18 @@ export interface AgeStage {
 
 export const AGE_STAGES: AgeStage[] = [
   { id: 'm1', label: { ar: 'الشهر الأول', en: 'Month 1' }, minMonths: 0, maxMonths: 1 },
-  { id: 'm2', label: { ar: 'الشهر الثاني', en: 'Month 2' }, minMonths: 1, maxMonths: 2 },
-  { id: 'm4', label: { ar: 'الشهر الرابع', en: 'Month 4' }, minMonths: 3, maxMonths: 4 },
-  { id: 'm6', label: { ar: 'الشهر السادس', en: 'Month 6' }, minMonths: 5, maxMonths: 6 },
-  { id: 'm9', label: { ar: 'الشهر التاسع', en: 'Month 9' }, minMonths: 8, maxMonths: 9 },
-  { id: 'm12', label: { ar: 'السنة الأولى', en: 'Year 1 (12 months)' }, minMonths: 11, maxMonths: 12 },
-  { id: 'm15', label: { ar: '15 شهر', en: '15 months' }, minMonths: 14, maxMonths: 15 },
-  { id: 'm18', label: { ar: '18 شهر', en: '18 months' }, minMonths: 17, maxMonths: 18 },
-  { id: 'm24', label: { ar: 'السنتان', en: '2 years' }, minMonths: 23, maxMonths: 24 },
-  { id: 'm30', label: { ar: '30 شهر', en: '30 months' }, minMonths: 29, maxMonths: 30 },
-  { id: 'y3', label: { ar: '3 سنوات', en: '3 years' }, minMonths: 35, maxMonths: 36 },
-  { id: 'y4', label: { ar: '4 سنوات', en: '4 years' }, minMonths: 47, maxMonths: 48 },
-  { id: 'y5', label: { ar: '5 سنوات', en: '5 years' }, minMonths: 59, maxMonths: 60 },
+  { id: 'm2', label: { ar: 'الشهر الثاني', en: 'Month 2' }, minMonths: 2, maxMonths: 2 },
+  { id: 'm4', label: { ar: 'الشهر الرابع', en: 'Month 4' }, minMonths: 4, maxMonths: 4 },
+  { id: 'm6', label: { ar: 'الشهر السادس', en: 'Month 6' }, minMonths: 6, maxMonths: 6 },
+  { id: 'm9', label: { ar: 'الشهر التاسع', en: 'Month 9' }, minMonths: 9, maxMonths: 9 },
+  { id: 'm12', label: { ar: 'السنة الأولى', en: 'Year 1 (12 months)' }, minMonths: 12, maxMonths: 12 },
+  { id: 'm15', label: { ar: '15 شهر', en: '15 months' }, minMonths: 15, maxMonths: 15 },
+  { id: 'm18', label: { ar: '18 شهر', en: '18 months' }, minMonths: 18, maxMonths: 18 },
+  { id: 'm24', label: { ar: 'السنتان', en: '2 years' }, minMonths: 24, maxMonths: 24 },
+  { id: 'm30', label: { ar: '30 شهر', en: '30 months' }, minMonths: 30, maxMonths: 30 },
+  { id: 'y3', label: { ar: '3 سنوات', en: '3 years' }, minMonths: 36, maxMonths: 36 },
+  { id: 'y4', label: { ar: '4 سنوات', en: '4 years' }, minMonths: 48, maxMonths: 48 },
+  { id: 'y5', label: { ar: '5 سنوات', en: '5 years' }, minMonths: 60, maxMonths: 60 },
 ];
 
 export interface Milestone {
@@ -83,49 +84,51 @@ export const MILESTONES: Milestone[] = [
   { id: 'ms-m4-6', ageStageId: 'm4', domain: 'cognitive', title: { ar: 'يتابع الأشياء بعينيه من جانب لآخر', en: 'Tracks objects with eyes side to side' } },
 
   // شهر 6
-  { id: 'ms-m6-1', ageStageId: 'm6', domain: 'social_emotional', title: { ar: 'يعرف الوجوه المألوفة ويبدي انزعاجًا من الغرباء', en: 'Knows familiar faces and shows wariness of strangers' } },
-  { id: 'ms-m6-2', ageStageId: 'm6', domain: 'language', title: { ar: 'يستجيب لاسمه ويصدر أصوات مقاطع (با-با، ما-ما دون قصد)', en: 'Responds to his name and babbles syllables (ba-ba, ma-ma, without meaning yet)' } },
-  { id: 'ms-m6-3', ageStageId: 'm6', domain: 'gross_motor', title: { ar: 'يجلس دون مساندة', en: 'Sits without support' } },
-  { id: 'ms-m6-4', ageStageId: 'm6', domain: 'gross_motor', title: { ar: 'يتدحرج من بطنه لظهره والعكس', en: 'Rolls from tummy to back and back to tummy' } },
-  { id: 'ms-m6-5', ageStageId: 'm6', domain: 'fine_motor', title: { ar: 'ينقل شيئًا من يد لأخرى', en: 'Passes a toy from one hand to the other' } },
+  { id: 'ms-m6-1', ageStageId: 'm6', domain: 'social_emotional', title: { ar: 'يعرف الوجوه المألوفة', en: 'Recognizes familiar people' } },
+  { id: 'ms-m6-2-v2', ageStageId: 'm6', domain: 'language', title: { ar: 'يتبادل الأصوات معك ويصدر أصوات مناغاة', en: 'Takes turns vocalizing with you and makes cooing sounds' } },
+  { id: 'ms-m6-3', ageStageId: 'm6', domain: 'gross_motor', title: { ar: 'يسند نفسه بيديه أثناء الجلوس', en: 'Supports himself with his hands while sitting' } },
+  { id: 'ms-m6-4', ageStageId: 'm6', domain: 'gross_motor', title: { ar: 'يتقلب من بطنه إلى ظهره', en: 'Rolls from his tummy onto his back' } },
+  { id: 'ms-m6-5-v2', ageStageId: 'm6', domain: 'fine_motor', title: { ar: 'يمد يده ليمسك لعبة يريدها', en: 'Reaches out to grasp a toy he wants' } },
 
   // شهر 9
   { id: 'ms-m9-1', ageStageId: 'm9', domain: 'social_emotional', title: { ar: 'يخاف من الغرباء ويتعلق بالوالدين (قلق الانفصال)', en: 'Is wary of strangers and clings to parents (separation anxiety)' } },
-  { id: 'ms-m9-2', ageStageId: 'm9', domain: 'language', title: { ar: 'يفهم كلمة "لا" ويردد مقاطع صوتية', en: 'Understands "no" and repeats sound syllables' } },
-  { id: 'ms-m9-3', ageStageId: 'm9', domain: 'gross_motor', title: { ar: 'يزحف ويقف ممسكًا بشيء', en: 'Crawls and pulls to stand holding onto something' } },
-  { id: 'ms-m9-4', ageStageId: 'm9', domain: 'fine_motor', title: { ar: 'يستخدم إصبعيه (السبابة والإبهام) لالتقاط أشياء صغيرة', en: 'Uses fingers (pincer grasp) to pick up small objects' } },
+  { id: 'ms-m9-2', ageStageId: 'm9', domain: 'language', title: { ar: 'يردد مقاطع صوتية مثل با با وما ما', en: 'Babbles repeated syllables such as ba-ba and ma-ma' } },
+  { id: 'ms-m9-3-v2', ageStageId: 'm9', domain: 'gross_motor', title: { ar: 'يجلس من غير مساندة ويصل لوضع الجلوس بنفسه', en: 'Sits unsupported and gets into a sitting position' } },
+  { id: 'ms-m9-4-v2', ageStageId: 'm9', domain: 'fine_motor', title: { ar: 'ينقل الأشياء بين يديه ويستخدم أصابعه لجمع الطعام نحوه', en: 'Transfers objects between hands and rakes food toward himself with his fingers' } },
   { id: 'ms-m9-5', ageStageId: 'm9', domain: 'cognitive', title: { ar: 'يبحث عن شيء أخفيته أمامه', en: 'Looks for an object hidden in front of him' } },
+
+  { id: 'ms-m9-6', ageStageId: 'm9', domain: 'social_emotional', title: { ar: 'ينظر إليك لما تناديه باسمه', en: 'Looks toward you when you call his name' } },
 
   // 12 شهر
   { id: 'ms-m12-1', ageStageId: 'm12', domain: 'social_emotional', title: { ar: 'يلعب ألعاب تفاعلية بسيطة مثل "باي باي"', en: 'Plays simple interactive games like "bye-bye"' } },
   { id: 'ms-m12-2', ageStageId: 'm12', domain: 'language', title: { ar: 'يقول كلمة واحدة أو أكثر بمعنى واضح (ماما/بابا)', en: 'Says one or more words with clear meaning (mama/baba)' } },
-  { id: 'ms-m12-3', ageStageId: 'm12', domain: 'language', title: { ar: 'يشير للأشياء التي يريدها', en: 'Points to things he wants' } },
-  { id: 'ms-m12-4', ageStageId: 'm12', domain: 'gross_motor', title: { ar: 'يقف بمفرده ويمشي وهو ممسك بالأثاث', en: 'Stands alone and walks holding onto furniture' } },
+  { id: 'ms-m12-3-v2', ageStageId: 'm12', domain: 'language', title: { ar: 'يفهم كلمة لا ويتوقف للحظة عند سماعها', en: 'Pauses briefly when told no' } },
+  { id: 'ms-m12-4', ageStageId: 'm12', domain: 'gross_motor', title: { ar: 'يسحب نفسه للوقوف ويمشي ممسكًا بالأثاث', en: 'Pulls himself up and walks while holding furniture' } },
   { id: 'ms-m12-5', ageStageId: 'm12', domain: 'cognitive', title: { ar: 'يستكشف الأشياء بطرق مختلفة (يهزها، يرميها)', en: 'Explores objects in different ways (shakes, throws)' } },
 
   // 15 شهر
-  { id: 'ms-m15-1', ageStageId: 'm15', domain: 'gross_motor', title: { ar: 'يمشي بمفرده دون مساعدة', en: 'Walks alone without assistance' } },
-  { id: 'ms-m15-2', ageStageId: 'm15', domain: 'language', title: { ar: 'يقول 3 كلمات أو أكثر', en: 'Says 3 or more words' } },
+  { id: 'ms-m15-1', ageStageId: 'm15', domain: 'gross_motor', title: { ar: 'يأخذ بضع خطوات بمفرده', en: 'Takes a few steps independently' } },
+  { id: 'ms-m15-2', ageStageId: 'm15', domain: 'language', title: { ar: 'يحاول يقول كلمة أو كلمتين غير ماما وبابا', en: 'Attempts one or two words beyond mama and dada' } },
   { id: 'ms-m15-3', ageStageId: 'm15', domain: 'social_emotional', title: { ar: 'يظهر تعلقًا واضحًا بمقدم الرعاية ويقلد أفعال الكبار', en: "Shows clear attachment to caregiver and copies adults' actions" } },
   { id: 'ms-m15-4', ageStageId: 'm15', domain: 'cognitive', title: { ar: 'يستخدم الأشياء بشكل صحيح (يشرب من الكوب، يمشط شعره)', en: 'Uses objects correctly (drinks from a cup, brushes hair)' } },
 
   // 18 شهر
-  { id: 'ms-m18-1', ageStageId: 'm18', domain: 'language', title: { ar: 'يقول حوالي 10 كلمات أو أكثر', en: 'Says about 10 or more words' } },
-  { id: 'ms-m18-2', ageStageId: 'm18', domain: 'gross_motor', title: { ar: 'يجري ويصعد السلم بمساعدة', en: 'Runs and climbs stairs with help' } },
-  { id: 'ms-m18-3', ageStageId: 'm18', domain: 'fine_motor', title: { ar: 'يأكل بالملعقة ويشرب من الكوب بمفرده', en: 'Eats with a spoon and drinks from a cup by himself' } },
-  { id: 'ms-m18-4', ageStageId: 'm18', domain: 'social_emotional', title: { ar: 'يشير لجزء من جسمه عند سؤاله', en: 'Points to a body part when asked' } },
+  { id: 'ms-m18-1', ageStageId: 'm18', domain: 'language', title: { ar: 'يحاول يقول 3 كلمات أو أكثر غير ماما وبابا', en: 'Attempts at least three words beyond mama and dada' } },
+  { id: 'ms-m18-2-v2', ageStageId: 'm18', domain: 'gross_motor', title: { ar: 'يمشي بمفرده من غير ما يمسك في شخص أو شيء', en: 'Walks independently without holding anyone or anything' } },
+  { id: 'ms-m18-3', ageStageId: 'm18', domain: 'fine_motor', title: { ar: 'يحاول يستخدم الملعقة ويشرب من كوب مفتوح، وقد يسكب بعضه', en: 'Attempts to use a spoon and drinks from an open cup, with some spills' } },
+  { id: 'ms-m18-4-v2', ageStageId: 'm18', domain: 'social_emotional', title: { ar: 'يشير لشيء ليلفت انتباهك إليه', en: 'Points something out to share his interest with you' } },
 
   // 24 شهر
   { id: 'ms-m24-1', ageStageId: 'm24', domain: 'language', title: { ar: 'يكوّن جملًا من كلمتين (عايز مية)', en: 'Forms two-word sentences ("want water")' } },
-  { id: 'ms-m24-2', ageStageId: 'm24', domain: 'language', title: { ar: 'يتبع تعليمات من خطوتين', en: 'Follows two-step instructions' } },
+  { id: 'ms-m24-2-v2', ageStageId: 'm24', domain: 'language', title: { ar: 'يشير لجزأين على الأقل من جسمه عند سؤاله', en: 'Identifies at least two body parts by pointing when asked' } },
   { id: 'ms-m24-3', ageStageId: 'm24', domain: 'gross_motor', title: { ar: 'يركض بثبات ويركل الكرة', en: 'Runs steadily and kicks a ball' } },
-  { id: 'ms-m24-4', ageStageId: 'm24', domain: 'fine_motor', title: { ar: 'يبني برجًا من 4 مكعبات أو أكثر', en: 'Builds a tower of 4 or more blocks' } },
-  { id: 'ms-m24-5', ageStageId: 'm24', domain: 'social_emotional', title: { ar: 'يقلد سلوك الآخرين ويلعب بجانب أطفال آخرين', en: 'Copies others and plays alongside other children' } },
+  { id: 'ms-m24-4-v2', ageStageId: 'm24', domain: 'fine_motor', title: { ar: 'يأكل باستخدام الملعقة', en: 'Uses a spoon to eat' } },
+  { id: 'ms-m24-5-v2', ageStageId: 'm24', domain: 'social_emotional', title: { ar: 'يلاحظ لما حد يكون زعلان أو متألم', en: 'Notices when another person is upset or hurt' } },
 
   // 30 شهر
   { id: 'ms-m30-1', ageStageId: 'm30', domain: 'language', title: { ar: 'يستخدم جملًا من 2-4 كلمات ويسمي أشياء مألوفة', en: 'Uses 2-4 word sentences and names familiar objects' } },
   { id: 'ms-m30-2', ageStageId: 'm30', domain: 'fine_motor', title: { ar: 'يمسك القلم ويحاول الرسم بخطوط', en: 'Holds a pen and attempts to draw lines' } },
-  { id: 'ms-m30-3', ageStageId: 'm30', domain: 'cognitive', title: { ar: 'يفرز الأشكال والألوان', en: 'Sorts shapes and colors' } },
+  { id: 'ms-m30-3-v2', ageStageId: 'm30', domain: 'cognitive', title: { ar: 'يتبع تعليمات من خطوتين ويعرف لونًا واحدًا على الأقل', en: 'Carries out two-step instructions and recognizes at least one color' } },
   { id: 'ms-m30-4', ageStageId: 'm30', domain: 'social_emotional', title: { ar: 'يبدي استقلالية ويحاول القيام بمهام بنفسه', en: 'Shows independence and tries to do tasks by himself' } },
 
   // 3 سنوات
@@ -137,16 +140,16 @@ export const MILESTONES: Milestone[] = [
 
   // 4 سنوات
   { id: 'ms-y4-1', ageStageId: 'y4', domain: 'language', title: { ar: 'يحكي قصة قصيرة ويستخدم جملًا من 4 كلمات فأكثر', en: 'Tells a short story and uses 4+ word sentences' } },
-  { id: 'ms-y4-2', ageStageId: 'y4', domain: 'gross_motor', title: { ar: 'يقفز على قدم واحدة ويمسك الكرة', en: 'Hops on one foot and catches a ball' } },
-  { id: 'ms-y4-3', ageStageId: 'y4', domain: 'fine_motor', title: { ar: 'يرسم شخصًا بـ2-4 أجزاء ويستخدم المقص', en: 'Draws a person with 2-4 parts and uses scissors' } },
+  { id: 'ms-y4-2', ageStageId: 'y4', domain: 'gross_motor', title: { ar: 'يمسك كرة كبيرة معظم المحاولات', en: 'Catches a large ball on most attempts' } },
+  { id: 'ms-y4-3', ageStageId: 'y4', domain: 'fine_motor', title: { ar: 'يرسم شخصًا بثلاثة أجزاء أو أكثر ويمسك القلم بأصابعه', en: 'Draws a person with at least three body parts and holds a pencil with his fingers' } },
   { id: 'ms-y4-4', ageStageId: 'y4', domain: 'social_emotional', title: { ar: 'يفضل اللعب التفاعلي مع أطفال آخرين ويتقمص أدوارًا', en: 'Prefers interactive play with other children and role-plays' } },
-  { id: 'ms-y4-5', ageStageId: 'y4', domain: 'cognitive', title: { ar: 'يعد حتى 4 ويسمي بعض الألوان', en: 'Counts to 4 and names some colors' } },
+  { id: 'ms-y4-5', ageStageId: 'y4', domain: 'cognitive', title: { ar: 'يسمي بعض الألوان ويعرف ما يأتي بعد ذلك في قصة مألوفة', en: 'Names some colors and predicts what happens next in a familiar story' } },
 
   // 5 سنوات
-  { id: 'ms-y5-1', ageStageId: 'y5', domain: 'language', title: { ar: 'يتحدث بوضوح تام ويستخدم جملًا مركبة، يعرف اسمه وعنوانه', en: 'Speaks clearly, uses compound sentences, knows his name and address' } },
-  { id: 'ms-y5-2', ageStageId: 'y5', domain: 'gross_motor', title: { ar: 'يقفز، يتأرجح، يقف على قدم واحدة لثوانٍ', en: 'Hops, swings, stands on one foot for a few seconds' } },
+  { id: 'ms-y5-1-v2', ageStageId: 'y5', domain: 'language', title: { ar: 'يحكي قصة من حدثين أو أكثر ويستمر في حوار متبادل', en: 'Tells a story with at least two events and keeps a conversation going' } },
+  { id: 'ms-y5-2', ageStageId: 'y5', domain: 'gross_motor', title: { ar: 'يقفز على قدم واحدة', en: 'Hops using one foot' } },
   { id: 'ms-y5-3', ageStageId: 'y5', domain: 'fine_motor', title: { ar: 'يكتب بعض الحروف ويرسم شخصًا بتفاصيل أكثر', en: 'Writes some letters and draws a person with more detail' } },
-  { id: 'ms-y5-4', ageStageId: 'y5', domain: 'social_emotional', title: { ar: 'يميز الواقع عن الخيال ويظهر استقلالية أكبر', en: 'Tells reality from make-believe and shows greater independence' } },
+  { id: 'ms-y5-4-v2', ageStageId: 'y5', domain: 'social_emotional', title: { ar: 'يتبع قواعد اللعبة ويتبادل الأدوار مع الأطفال', en: 'Follows game rules and takes turns with other children' } },
   { id: 'ms-y5-5', ageStageId: 'y5', domain: 'cognitive', title: { ar: 'يعد حتى 10 ويفهم المفاهيم اليومية (الوقت، العد)', en: 'Counts to 10 and understands everyday concepts (time, counting)' } },
 ];
 
@@ -325,17 +328,17 @@ export const RED_FLAGS: RedFlag[] = [
     id: 'rf-m9-2',
     ageStageId: 'm9',
     domain: 'gross_motor',
-    warningSign: { ar: 'لا يستطيع تحمل وزنه على رجليه أو لا يزحف إطلاقًا', en: 'Cannot bear weight on his legs or does not crawl at all' },
+    warningSign: { ar: 'لا يجلس من غير مساندة عند 9 شهور', en: 'Cannot sit unsupported at 9 months' },
     possibleCauses: [
-      { ar: 'تفاوت طبيعي (بعض الأطفال يتخطون الزحف)', en: 'Natural variation (some children skip crawling)' },
+      { ar: 'اختلاف في التطور الحركي يحتاج تقييمًا', en: 'Variation in motor development that needs assessment' },
       { ar: 'ضعف عضلي', en: 'Muscle weakness' },
       { ar: 'مشكلة عصبية عضلية تحتاج تقييم', en: 'A neuromuscular issue needing evaluation' },
     ],
     severity: 'needs_evaluation',
     specialist: { ar: 'طبيب أطفال / أخصائي علاج طبيعي للأطفال', en: 'Pediatrician / pediatric physical therapist' },
     notes: {
-      ar: 'تخطي الزحف بحد ذاته طبيعي عند كثير من الأطفال، لكن غياب تحمل الوزن على الرجلين يستحق الفحص.',
-      en: 'Skipping crawling by itself is normal for many children, but the inability to bear weight on the legs is worth checking.',
+      ar: 'الجلوس من غير مساندة من مهارات 9 شهور. لو مش موجود، ناقشيه مع طبيب الأطفال.',
+      en: 'Discuss missing independent sitting at 9 months with the pediatrician.',
     },
   },
   {
@@ -365,11 +368,11 @@ export const RED_FLAGS: RedFlag[] = [
       { ar: 'ضعف عضلي', en: 'Muscle weakness' },
       { ar: 'خلل عصبي عضلي نادر', en: 'A rare neuromuscular disorder' },
     ],
-    severity: 'normal_variant_possible',
-    specialist: { ar: 'طبيب أطفال (للمتابعة الروتينية أولاً)', en: 'Pediatrician (for routine follow-up first)' },
+    severity: 'needs_evaluation',
+    specialist: { ar: 'طبيب أطفال لتقييم النمو الحركي', en: 'Pediatrician for motor development assessment' },
     notes: {
-      ar: 'المدى الطبيعي للمشي واسع جدًا؛ القلق يبدأ فعليًا إذا لم يمشِ الطفل عند 18 شهرًا.',
-      en: 'The normal range for walking is very wide; real concern starts if the child still isn\'t walking by 18 months.',
+      ar: 'عدم الوقوف حتى مع الدعم يستحق مناقشته مع طبيب الأطفال؛ لا تنتظري سن المشي المستقل لو عندك قلق.',
+      en: 'Inability to stand even with support deserves discussion with the pediatrician; do not wait for independent walking if you are concerned.',
     },
   },
   {
@@ -427,7 +430,7 @@ export const RED_FLAGS: RedFlag[] = [
     id: 'rf-m18-1',
     ageStageId: 'm18',
     domain: 'language',
-    warningSign: { ar: 'أقل من 6 كلمات في مفرداته، أو لا يقلد الآخرين', en: 'Fewer than 6 words in his vocabulary, or does not imitate others' },
+    warningSign: { ar: 'لا يحاول يقول 3 كلمات غير ماما وبابا، أو لا يفهم أمرًا بسيطًا من خطوة واحدة', en: 'Does not attempt three words beyond mama and dada, or does not understand a simple one-step direction' },
     possibleCauses: [
       { ar: 'تأخر لغوي بسيط شائع الحدوث', en: 'A common mild language delay' },
       { ar: 'ضعف سمع لم يُكتشف بعد', en: 'Undetected hearing loss' },
@@ -463,15 +466,15 @@ export const RED_FLAGS: RedFlag[] = [
     domain: 'language',
     warningSign: { ar: 'لا يستخدم جملًا من كلمتين ولا يفهم تعليمات بسيطة', en: 'Does not use two-word sentences and does not understand simple instructions' },
     possibleCauses: [
-      { ar: 'تأخر لغوي (قد يكون مؤقتًا خصوصًا في بيئات ثنائية اللغة)', en: 'A language delay (may be temporary, especially in bilingual environments)' },
+      { ar: 'تأخر لغوي يحتاج تقييمًا عبر كل اللغات المستخدمة', en: 'A language delay requiring assessment across all languages used' },
       { ar: 'ضعف سمعي', en: 'Hearing loss' },
       { ar: 'اضطراب في التواصل يحتاج تقييمًا متخصصًا', en: 'A communication disorder needing specialized evaluation' },
     ],
     severity: 'needs_evaluation',
     specialist: { ar: 'أخصائي تخاطب وسمعيات + طبيب أطفال', en: 'Speech and hearing therapist + pediatrician' },
     notes: {
-      ar: 'في البيئات ثنائية اللغة قد يكون التأخر الظاهري طبيعيًا، لكن يستحق تقييمًا للتفريق.',
-      en: 'In bilingual environments the apparent delay may be normal, but it is still worth an evaluation to tell the difference.',
+      ar: 'التعرّض لأكتر من لغة لا يسبب تأخر اللغة بحد ذاته. التقييم يراعي مهارات الطفل في كل لغاته.',
+      en: 'Exposure to multiple languages does not itself cause language delay. Assessment considers skills across all of the child’s languages.',
     },
   },
   {

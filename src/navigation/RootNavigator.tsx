@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
@@ -16,18 +17,23 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function LanguageToggleButton() {
   const { lang, toggleLang } = useLanguage();
   return (
-    <Pressable onPress={toggleLang} style={styles.langButton} hitSlop={8}>
+    <Pressable accessibilityRole="button" accessibilityLabel={lang === 'ar' ? 'Switch to English' : 'التبديل للعربية'} onPress={toggleLang} style={styles.langButton} hitSlop={8}>
       <Text style={styles.langButtonText}>{lang === 'ar' ? 'EN' : 'AR'}</Text>
     </Pressable>
   );
 }
 
 export default function RootNavigator() {
-  const { profile, isLoading } = useAppStore();
-  const { t } = useLanguage();
-  if (isLoading) return null;
+  const { profile, isLoading, storageError, retryStorage } = useAppStore();
+  const { t, isLoading: languageLoading, isRTL } = useLanguage();
+  if (isLoading || languageLoading) return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator color={colors.primary} /></View>;
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={storageError ? ['top', 'bottom'] : ['bottom']}>
+      {storageError && <View style={{ padding: 12, backgroundColor: colors.chipBg }}>
+        <Text accessibilityRole="alert" style={{ color: colors.text, textAlign: isRTL ? 'right' : 'left' }}>{t(storageError === 'load' ? 'storageLoadError' : 'storageSaveError')}</Text>
+        <Pressable accessibilityRole="button" onPress={retryStorage}><Text style={{ color: colors.primaryDark, paddingTop: 8 }}>{t('retryButton')}</Text></Pressable>
+      </View>}
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName={profile ? 'Home' : 'Onboarding'}
@@ -42,8 +48,8 @@ export default function RootNavigator() {
           name="Onboarding"
           component={OnboardingScreen}
           options={({ route }) => ({
-            headerShown: !!route.params?.isEditing,
-            title: t('editProfileTitle'),
+            headerShown: true,
+            title: t(route.params?.isEditing ? 'editProfileTitle' : 'appName'),
           })}
         />
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: t('appName') }} />
@@ -51,6 +57,7 @@ export default function RootNavigator() {
         <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('chatTitle') }} />
       </Stack.Navigator>
     </NavigationContainer>
+    </SafeAreaView>
   );
 }
 

@@ -1,69 +1,89 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MILESTONES } from '../data/milestones';
+import { BabyProfile, PersistedState, createWriteQueue, defaultState, restoreState, validateProfile } from './persistedState';
+export type { BabyProfile } from './persistedState';
 
 const STORAGE_KEY = 'mumai:v1';
-
-export interface BabyProfile {
-  name: string;
-  birthDateISO: string;
-}
-
-interface PersistedState {
-  profile: BabyProfile | null;
-  completedMilestoneIds: string[];
-}
+const persist = createWriteQueue((value) => AsyncStorage.setItem(STORAGE_KEY, value));
 
 interface AppStoreValue extends PersistedState {
   isLoading: boolean;
+  storageError: 'load' | 'save' | null;
+  retryStorage: () => void;
   setProfile: (profile: BabyProfile) => void;
   toggleMilestone: (milestoneId: string) => void;
   isMilestoneDone: (milestoneId: string) => boolean;
   resetProfile: () => void;
 }
 
-const defaultState: PersistedState = { profile: null, completedMilestoneIds: [] };
-
 const AppStoreContext = createContext<AppStoreValue | undefined>(undefined);
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PersistedState>(defaultState);
   const [isLoading, setIsLoading] = useState(true);
+  const [storageError, setStorageError] = useState<'load' | 'save' | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [revision, setRevision] = useState(0);
+  const latestRevision = useRef(0);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) setState(JSON.parse(raw));
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
+    let active = true;
+    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      const restored = restoreState(raw);
+      if (active) { setState(restored); setStorageError(null); }
+    }).catch(() => {
+      if (active) setStorageError('load');
+    }).finally(() => {
+      if (active) setIsLoading(false);
+    });
+    return () => { active = false; };
+  }, [loadAttempt]);
 
   useEffect(() => {
-    if (!isLoading) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(() => {});
-  }, [state, isLoading]);
+    // Merely opening the app must never overwrite an unreadable saved profile.
+    if (isLoading || revision === 0) return;
+    let active = true;
+    persist(JSON.stringify(state)).then(() => {
+      if (active && latestRevision.current === revision) setStorageError(null);
+    }).catch(() => {
+      if (active && latestRevision.current === revision) setStorageError('save');
+    });
+    return () => { active = false; };
+  }, [state, revision, isLoading]);
 
-  const value = useMemo<AppStoreValue>(
-    () => ({
-      ...state,
-      isLoading,
-      setProfile: (profile) => setState((s) => ({ ...s, profile })),
-      toggleMilestone: (milestoneId) =>
-        setState((s) => {
-          const has = s.completedMilestoneIds.includes(milestoneId);
-          return {
-            ...s,
-            completedMilestoneIds: has
-              ? s.completedMilestoneIds.filter((id) => id !== milestoneId)
-              : [...s.completedMilestoneIds, milestoneId],
-          };
-        }),
-      isMilestoneDone: (milestoneId) => state.completedMilestoneIds.includes(milestoneId),
-      resetProfile: () => setState(defaultState),
-    }),
-    [state, isLoading]
-  );
+  function markChanged() {
+    latestRevision.current += 1;
+    setRevision(latestRevision.current);
+  }
+
+  const value = useMemo<AppStoreValue>(() => ({
+    ...state, isLoading, storageError,
+    retryStorage: () => {
+      if (storageError === 'load' && revision === 0) {
+        setIsLoading(true);
+        setLoadAttempt((attempt) => attempt + 1);
+      } else markChanged();
+    },
+    setProfile: (profile) => {
+      const valid = validateProfile(profile);
+      if (!valid || isLoading) return;
+      setState((previous) => ({ ...previous, profile: valid }));
+      markChanged();
+    },
+    toggleMilestone: (milestoneId) => {
+      if (isLoading || !state.profile || !MILESTONES.some((item) => item.id === milestoneId)) return;
+      setState((previous) => ({
+        ...previous,
+        completedMilestoneIds: previous.completedMilestoneIds.includes(milestoneId)
+          ? previous.completedMilestoneIds.filter((id) => id !== milestoneId)
+          : [...previous.completedMilestoneIds, milestoneId],
+      }));
+      markChanged();
+    },
+    isMilestoneDone: (id) => state.completedMilestoneIds.includes(id),
+    resetProfile: () => { setState(defaultState); markChanged(); },
+  }), [state, isLoading, storageError, revision]);
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;
 }

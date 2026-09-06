@@ -2,11 +2,14 @@ import React, { createContext, useContext, useEffect, useMemo, useState, ReactNo
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import strings, { Lang, StringKey } from './strings';
 import { Localized } from '../data/milestones';
+import { createWriteQueue } from '../store/persistedState';
 
 const LANG_STORAGE_KEY = 'mumai:lang';
+const persistLanguage = createWriteQueue((value) => AsyncStorage.setItem(LANG_STORAGE_KEY, value));
 
 interface LanguageContextValue {
   lang: Lang;
+  isLoading: boolean;
   isRTL: boolean;
   setLang: (lang: Lang) => void;
   toggleLang: () => void;
@@ -18,16 +21,19 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('ar');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     AsyncStorage.getItem(LANG_STORAGE_KEY).then((v) => {
-      if (v === 'ar' || v === 'en') setLangState(v);
-    });
+      if (active && (v === 'ar' || v === 'en')) setLangState(v);
+    }).catch(() => {}).finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
   }, []);
 
   function setLang(next: Lang) {
     setLangState(next);
-    AsyncStorage.setItem(LANG_STORAGE_KEY, next).catch(() => {});
+    persistLanguage(next).catch(() => {});
   }
 
   const value = useMemo<LanguageContextValue>(() => {
@@ -35,20 +41,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       let text: string = strings[key][lang];
       if (vars) {
         for (const [k, v] of Object.entries(vars)) {
-          text = text.replace(`{${k}}`, String(v));
+          text = text.split(`{${k}}`).join(String(v));
         }
       }
       return text;
     }
     return {
       lang,
+      isLoading,
       isRTL: lang === 'ar',
       setLang,
       toggleLang: () => setLang(lang === 'ar' ? 'en' : 'ar'),
       t,
       pick: (localized: Localized) => localized[lang],
     };
-  }, [lang]);
+  }, [lang, isLoading]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

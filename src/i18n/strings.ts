@@ -17,6 +17,11 @@ const strings = {
   childNameLabel: { ar: 'اسم الطفل', en: "Child's name" },
   childNamePlaceholder: { ar: 'مثلاً: يوسف', en: 'e.g. Youssef' },
   birthDateLabel: { ar: 'تاريخ الميلاد', en: 'Date of birth' },
+  invalidBirthDate: { ar: 'اختاري تاريخ ميلاد صحيح، النهارده أو قبله.', en: 'Choose a valid birthday, today or earlier.' },
+  storageLoadError: { ar: 'تعذّر قراءة البيانات المحفوظة. جرّبي تاني لاسترجاعها قبل تسجيل بيانات جديدة.', en: 'Saved data could not be read. Retry to recover it before entering a new profile.' },
+  storageSaveError: { ar: 'التغييرات ظاهرة، لكن لسه متحفظتش على الجهاز. جرّبي الحفظ تاني.', en: 'Your changes are visible but have not been saved on this device. Please retry.' },
+  retryButton: { ar: 'إعادة المحاولة', en: 'Retry' },
+  invalidStage: { ar: 'المرحلة دي مش موجودة. ارجعي لاختيار مرحلة من المتابعة.', en: 'This stage is unavailable. Go back and choose a stage from the tracker.' },
   startTrackingCta: { ar: 'ابدئي المتابعة', en: 'Start tracking' },
   saveChangesCta: { ar: 'حفظ التعديلات', en: 'Save changes' },
   editProfileTitle: { ar: 'تعديل بيانات الطفل', en: "Edit child's info" },
@@ -39,7 +44,7 @@ const strings = {
     ar: 'علّمي على المهارات اللي طفلك بيعملها في المرحلة دي',
     en: 'Check off the skills your child is doing at this stage',
   },
-  askAboutRemaining: { ar: 'لسه فيه {n} مهارة معملهاش؟ اسألي عنها', en: "{n} skills not done yet? Ask about them" },
+  askAboutRemaining: { ar: 'فيه {n} مهارة لسه مش متعلّم عليها — اسألي عنها', en: '{n} unchecked skills — ask about them' },
   showRedFlags: { ar: 'عرض علامات تستحق انتباه في المرحلة دي ({n})', en: 'Show signs worth attention at this stage ({n})' },
   hideRedFlags: { ar: 'إخفاء علامات تستحق انتباه في المرحلة دي ({n})', en: 'Hide signs worth attention at this stage ({n})' },
   possibleCausesLabel: { ar: 'الأسباب المحتملة:', en: 'Possible causes:' },
@@ -54,11 +59,19 @@ const strings = {
   // Chat
   chatTitle: { ar: 'اسألي المساعدة', en: 'Ask the assistant' },
   chatIntro: {
-    ar: 'أهلاً! اسأليني عن أي مهارة أو حاجة لاحظتيها على {name} في المرحلة العمرية دي، وهساعدك أفهم هل ده طبيعي ولا محتاج متابعة طبيب.',
-    en: "Hi! Ask me about any skill or anything you've noticed about {name} at this age, and I'll help you understand whether it's normal or needs a doctor's follow-up.",
+    ar: 'أهلاً! نقدر نراجع سوا مهارات نمو {name} والأسئلة اللي عندك عن الكلام والحركة والتواصل. احكيلي إيه اللي لاحظتيه، أو اختاري سؤال من الاقتراحات.',
+    en: 'Hi! We can review {name}’s development and your questions about speech, movement and communication. Tell me what you have noticed, or choose a suggested question.',
   },
   chatPlaceholder: { ar: 'اكتبي سؤالك هنا...', en: 'Type your question here...' },
   sendButton: { ar: 'إرسال', en: 'Send' },
+  chatLocal: { ar: 'دليل النمو المحلي — متاح من غير اتصال', en: 'Local development guide — available offline' },
+  chatProxy: { ar: 'رد من المساعد المتصل', en: 'Reply from the connected assistant' },
+  chatConnectionFailed: { ar: 'تعذّر الاتصال بالمساعد؛ الرد من دليل النمو المحلي.', en: 'The assistant is unavailable; this reply uses the local development guide.' },
+  chatError: { ar: 'حصل خطأ أثناء الرد. سؤالك رجع لخانة الكتابة عشان تقدري تحاولي تاني.', en: 'Something went wrong. Your question is back in the input so you can retry.' },
+  chatOverviewQuestion: { ar: 'إيه المهارات المناسبة لعمره؟', en: 'What milestones fit this age?' },
+  chatSpeechQuestion: { ar: 'إزاي أساعده يتكلم؟', en: 'How can I help with speech?' },
+  chatRemainingQuestion: { ar: 'إيه المهارات المتبقية في المرحلة دي؟', en: 'What are the remaining skills in this stage?' },
+  chatThinking: { ar: 'جاري تجهيز الرد…', en: 'Preparing a reply…' },
 
   // Navigation
   backButton: { ar: 'رجوع', en: 'Back' },
@@ -68,21 +81,6 @@ const strings = {
   chatDisclaimer: {
     ar: 'ملحوظة: المعلومات دي للتوعية بس مش تشخيص طبي. أي قلق حقيقي على تطور طفلك يستأهل زيارة طبيب الأطفال.',
     en: "Note: this information is for awareness only, not a medical diagnosis. Any real concern about your child's development deserves a pediatrician visit.",
-  },
-  chatNoMatch: {
-    ar: 'معنديش معلومة دقيقة كفاية عن السؤال ده بالتحديد. ممكن تقوليلي إيه بالظبط اللي لاحظتيه على {name} (مثلاً: مش بيمشي، مش بيتكلم، مش بيستجيب لصوته) وهساعدك أقرب ما يكون؟',
-    en: "I don't have specific enough information about this exact question. Could you tell me exactly what you've noticed about {name} (e.g. not walking, not talking, not responding to sounds) so I can help more precisely?",
-  },
-  chatRedFlagIntro: { ar: 'بالنسبة لـ{name}، دي أهم النقاط المتعلقة بسؤالك:', en: "Regarding {name}, here are the key points about your question:" },
-  chatSignLabel: { ar: 'العلامة:', en: 'Sign:' },
-  chatNoteLabel: { ar: 'ملاحظة:', en: 'Note:' },
-  chatMilestoneIntro: {
-    ar: 'دي بعض المهارات المتوقعة في المرحلة العمرية دي واللي ممكن تكون مرتبطة بسؤالك:',
-    en: 'Here are some expected skills at this age that may relate to your question:',
-  },
-  chatMilestoneOutro: {
-    ar: 'لو {name} لسه معملش المهارة دي، ده وارد جدًا يكون طبيعي خصوصًا لو قريب من حدود المرحلة، لكن لو استمر تأخره كام أسبوع كلمي طبيب الأطفال للاطمئنان.',
-    en: "If {name} hasn't done this skill yet, that's quite possibly normal especially near the edge of the stage, but if the delay continues for a few weeks, check with the pediatrician for peace of mind.",
   },
 } as const satisfies Record<string, LocalizedStr>;
 
