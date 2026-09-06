@@ -91,7 +91,7 @@ export default function ChatScreen({ route }: Props) {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={<View style={[styles.bubble, styles.bubbleAssistant, { maxWidth: '100%' }]}><Text style={[styles.bubbleTextAssistant, { textAlign }]}>{t('chatIntro', { name: babyName })}</Text></View>}
         ListFooterComponent={messages.length === 0 ? <View style={{ gap: spacing.sm }}>
-          {(['chatOverviewQuestion', 'chatSpeechQuestion', 'chatRemainingQuestion'] as const).map((key) => <Pressable key={key} accessibilityRole="button" disabled={loading} onPress={() => handleSend(t(key))} style={{ padding: spacing.sm, backgroundColor: colors.chipBg, borderRadius: radii.sm }}><Text style={{ color: colors.primaryDark, textAlign }}>{t(key)}</Text></Pressable>)}
+          {(['chatOverviewQuestion', ageMonths < 12 ? 'chatBabblingQuestion' : 'chatSpeechQuestion', 'chatRemainingQuestion'] as const).map((key) => <Pressable key={key} accessibilityRole="button" disabled={loading} onPress={() => handleSend(t(key))} style={{ padding: spacing.sm, backgroundColor: colors.chipBg, borderRadius: radii.sm }}><Text style={{ color: colors.primaryDark, textAlign }}>{t(key)}</Text></Pressable>)}
         </View> : null}
         keyExtractor={(m) => m.id}
         contentContainerStyle={{ padding: spacing.lg }}

@@ -38,10 +38,12 @@ for (const [query, age] of [
   ['مش بيتكلم من 3 شهور', undefined], ['بيمشي بقاله سنة', undefined],
 ]) test(`extracts ages, not word counts: ${query}`, () => assert.equal(ageInQuery(query), age));
 
-test('explicit age overrides a stale profile and labels future milestones', () => {
+test('explicit age overrides a stale profile and explains the earlier movement stage', () => {
   const reply = ruleBasedReply('ابني عنده ٦ شهور ومش بيمشي', ctx);
   assert.match(reply, /عمر 6 شهر/);
-  assert.match(reply, /مرحلة لاحقة/);
+  assert.match(reply, /المشي لوحده لسه مش متوقّع/);
+  assert.match(reply, /يسند نفسه بيديه/);
+  assert.doesNotMatch(reply, /مرحلة لاحقة|18 شهر/);
   assert.doesNotMatch(reply, /علامات للنقاش|طيف التوحد/);
 });
 

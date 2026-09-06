@@ -22,4 +22,6 @@ Additional references:
 
 Chat replies separate reference ages from the child’s current age, suppress future-age warning signs, and direct concerns or loss of acquired skills to a clinician. The local matcher is limited to development topics and is not an exhaustive medical triage system. The existing differential-cause lists in the stage screen are educational possibilities, not diagnoses of an individual child.
 
+Age-aware coaching uses skill progressions: sounds and vocal turn-taking before meaningful words; head control and supported sitting before unsupported sitting; and supported movement before independent steps. For example, speech coaching at 7 months uses the 6-month vocalization reference, not the 12- or 15-month word checklist. “Not yet expected” is an interpretation of the reference ages, not a claim that early words are impossible. Reference ages describe skills most children can do by that age, not exact onset dates or a diagnosis. Sound imitation and picture-book interaction follow the CDC parent tips above. Reports of absent current skills, hearing concerns or lost vocalization take priority over reassurance about later words.
+
 Some checklist entries were substantively corrected. Their IDs have a `-v2` suffix so an old checkmark cannot silently mark a different skill as achieved. Unchanged skills keep their IDs and saved checkmarks.

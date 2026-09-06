@@ -17,7 +17,7 @@ export function ageInQuery(query: string): number | undefined {
   const numberNames: Record<string, string> = {
     واحد: '1', اتنين: '2', اثنين: '2', تلاته: '3', ثلاثه: '3', اربعه: '4', خمسه: '5',
     سته: '6', ست: '6', سبعه: '7', تمانيه: '8', ثمانيه: '8', تسعه: '9', عشره: '10',
-    one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', nine: '9', eighteen: '18',
+    one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', eighteen: '18',
   };
   const numeric = text.split(' ').map((word) => numberNames[word] ?? word).join(' ');
   const compoundYear = /(?:^|\s)سنه\s+و\s*(\d{1,2})\s*(?:شهر|شهور|اشهر)(?=\s|$)/.exec(numeric);
@@ -74,8 +74,9 @@ export function urgentKind(query: string): 'emergency' | 'regression' | undefine
   const text = normalizeArabic(query);
   const emergency = ['مش بيتنفس', 'مبيتنفسش', 'مش قادر يتنفس', 'صعوبه في التنفس', 'صعوبه تنفس', 'شفايفه زرقا', 'فاقد الوعي', 'مش بيصحي', 'تشنجات', 'بيتشنج', 'not breathing', 'cannot breathe', 'can t breathe', 'difficulty breathing', 'blue lips', 'unconscious', 'won t wake', 'seizure'];
   if (emergency.some((phrase) => hasPhrase(text, phrase))) return 'emergency';
-  if (/(فقد|خسر|نسي).{0,25}(مهاره|مهارات|الكلام|المشي)/.test(text)
-    || /كان.{0,30}(بيتكلم|بيمشي|بيقعد|بيلعب|بيستجيب).{0,25}(بطل|مبقاش|مبقتش|وقف|مش)/.test(text)
-    || /(?:lost|losing).{0,30}(?:skill|skills|words|speech)|used to.{0,35}(?:no longer|stopped|can t)/.test(text)) return 'regression';
+  if (/(فقد|خسر|نسي).{0,25}(مهاره|مهارات|الكلام|المشي|المناغاه)/.test(text)
+    || /كان.{0,30}ب[يت](تكلم|مشي|قعد|لعب|ستجيب|ناغي).{0,25}(بطل|مبقاش|مبقتش|وقف|مش)/.test(text)
+    || /(?:بطل|بطلت|وقف|وقفت)\s+(?:يناغي|تناغي|المناغاه)/.test(text)
+    || /(?:lost|losing).{0,30}(?:skill|skills|words|speech|babbling)|used to.{0,35}(?:no longer|stopped|can t)|stopped (?:babbling|cooing)/.test(text)) return 'regression';
   return undefined;
 }

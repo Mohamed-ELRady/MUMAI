@@ -1,8 +1,9 @@
-import { AGE_STAGES, DOMAIN_LABELS, MILESTONES, RED_FLAGS, Domain, Localized } from '../data/milestones';
+import { AGE_STAGES, MILESTONES, RED_FLAGS, Domain, Localized } from '../data/milestones';
 import { currentStageForAge, formatAge } from '../data/ageHelpers';
 import { conceptsIn, hasPhrase, normalizeArabic, overlapScore } from './textMatch';
 import { ageInQuery, ConversationMessage, isConcern, isFollowUp, resolveConversation, urgentKind } from './chatUnderstanding';
 import strings, { Lang } from '../i18n/strings';
+import { asksAboutTiming, developmentGuidance } from './developmentGuidance';
 
 export interface ChatContext {
   babyName?: string;
@@ -111,6 +112,39 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
     'المراحل الموجودة هنا بتغطي من الولادة لحد 5 سنين. لطفل أكبر من كده، طبيب الأطفال يقدر يراجع المهارات المناسبة لعمره. قولي إيه التغيير اللي لاحظتيه، خصوصًا لو فيه فقدان مهارة قديمة.',
     'The checklists here cover birth through age 5. For an older child, a pediatrician can review age-appropriate skills. Describe the change you noticed, especially any loss of a previously acquired skill.'), ctx);
 
+  const plans = developmentGuidance(resolved, ctx.ageMonths, ctx.lang, query);
+  if (plans.length) {
+    const lines = [bilingual(ctx,
+      `بالنسبة لـ${name}، في عمر ${formatAge(ctx.ageMonths, ctx.lang)}:`,
+      `For ${name}, at an age of ${formatAge(ctx.ageMonths, ctx.lang)}:`)];
+    for (const plan of plans) {
+      lines.push(plan.lead);
+      if (plan.milestones.length) lines.push(bilingual(ctx, 'اللي نتابعه دلوقتي:', 'What to look for now:'),
+        ...plan.milestones.map((item) => `• ${item.title[ctx.lang]}`));
+      if (plan.timing) lines.push(plan.timing);
+      lines.push(bilingual(ctx, 'تقدري تساعديه كده:', 'Ways to help:'), ...plan.tips.map((tip) => `• ${tip}`));
+    }
+    // A question can mention several skills. An early speech expectation must
+    // never conceal a separate hearing, movement or interaction concern.
+    const handled = new Set(plans.flatMap((plan) => plan.concepts));
+    const otherConcepts = conceptsIn(resolved).filter((concept) => !handled.has(concept));
+    const additional = relevantItems(MILESTONES.filter((item) => stageAge(item.ageStageId) <= ctx.ageMonths), resolved, ctx, (item) => item.title)
+      .filter((item) => conceptsIn(`${item.title.ar} ${item.title.en}`).some((concept) => otherConcepts.includes(concept)))
+      .slice(0, 2);
+    if (additional.length) lines.push(bilingual(ctx, 'وبالنسبة للنقطة التانية في سؤالك، نتابع كمان:', 'For the other part of your question, also look for:'),
+      ...additional.map((item) => `• ${item.title[ctx.lang]}`));
+    if (isConcern(resolved)) {
+      lines.push(bilingual(ctx,
+        'لو المهارات المناسبة لعمره الموضحة فوق مش موجودة، أو عندك قلق عن استجابته وتفاعله، تواصلي مع طبيب الأطفال واطلبي تقييم النمو.',
+        'If the age-appropriate skills above are missing, or you are concerned about responses or interaction, contact the pediatrician for developmental screening.'));
+      if (conceptsIn(resolved).some((concept) => ['speech', 'babbling', 'hearing'].includes(concept))) lines.push(bilingual(ctx,
+        'لو مش بيستجيب للأصوات، اطلبي تقييم السمع؛ ما تستنيش ظهور الكلمات.',
+        'If sounds get no response, ask for a hearing assessment; do not wait for words to appear.'));
+    }
+    lines.push(...plans.map((plan) => plan.question));
+    return finish(lines.join('\n\n'), ctx);
+  }
+
   if (conceptsIn(resolved).includes('crawling')) return finish(bilingual(ctx,
     'الأطفال بيتحركوا بطرق مختلفة، وفيه أطفال بيتخطوا الزحف. غياب الزحف لوحده ما يكفيش للحكم على النمو. تابعي الجلوس والحركة واستخدام الناحيتين، ووفّري لعبًا آمنًا على الأرض تحت إشرافك. لو طفلك مش بيجلس من غير مساندة عند 9 شهور، أو عندك قلق عن حركته، ناقشي ده مع طبيب الأطفال.',
     'Babies move in different ways, and some skip crawling. Crawling alone cannot establish whether development is on track. Watch sitting, movement and use of both sides, and offer supervised floor play. Discuss missing unsupported sitting at 9 months, or any movement concern, with the pediatrician.'), ctx,
@@ -122,13 +156,20 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
   const useOverview = overview && conceptsIn(resolved).length === 0 && !domainIn(resolved);
   const milestones = useOverview
     ? MILESTONES.filter((item) => item.ageStageId === ctx.currentStageId && (!remaining || !ctx.completedMilestoneIds?.includes(item.id)))
-    : relevant.slice(0, 3);
+    : relevant.filter((item) => stageAge(item.ageStageId) <= ctx.ageMonths || asksAboutTiming(query)).slice(0, 3);
   const intro = bilingual(ctx,
     `بالنسبة لـ${name}، هستخدم عمر ${formatAge(ctx.ageMonths, ctx.lang)} في الإجابة.`,
     `For ${name}, I’m using an age of ${formatAge(ctx.ageMonths, ctx.lang)}.`);
   if (remaining && !milestones.length) return finish(`${intro}\n\n${bilingual(ctx,
     'كل مهارات المرحلة دي متعلّم عليها في المتابعة. لو فيه مهارة لاحظتي إنها اتغيّرت، قوليلي عنها.',
     'All skills in this stage are checked off. If you have noticed a change in a skill, tell me about it.')}`, ctx);
+  if (!useOverview && !milestones.length && relevant.length) return finish([
+    intro,
+    bilingual(ctx,
+      'الدليل عندي بيذكر المهارة دي في مرحلة أكبر من عمر طفلك. نبدأ بالقدرات اللي عنده دلوقتي، من غير ما نطالبه بمهارات مرحلة لاحقة. قولي بيقدر يعمل إيه حاليًا؟',
+      'This guide lists that skill at an older age. Start with your child’s current abilities without expecting later-stage skills. What can your child do now?'),
+    supportTip(resolved, ctx),
+  ].join('\n\n'), ctx);
   if (!milestones.length) return bilingual(ctx,
     `أقدر أساعدك في مراحل نمو ${name}: الكلام، الحركة، السمع، اللعب والتواصل. سؤالك محتاج تفاصيل أكتر أو معلومات خارج دليل النمو هنا. إيه اللي لاحظتيه وإمتى بدأ؟ ممكن تبدأي بـ«إيه المهارات المناسبة لعمره؟». لو السؤال عن مرض أو دواء، تواصلي مع طبيب الأطفال لتقييمه.`,
     `I can help with ${name}’s speech, movement, hearing, play and communication. This question needs more detail or information beyond this development guide. What have you noticed, and when did it start? Try “What milestones fit this age?” For an illness or medicine question, contact the pediatrician for an assessment.`);
@@ -165,13 +206,19 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
 export function buildGrounding(query: string, originalContext: ChatContext, history: ConversationMessage[] = []): string {
   const ctx = contextForQuery(query, originalContext, history);
   const resolved = resolveConversation(query, history);
-  const relevant = relevantItems(MILESTONES, resolved, ctx, (item) => item.title).slice(0, 4);
-  const reference = relevant.length ? relevant : MILESTONES.filter((item) => item.ageStageId === ctx.currentStageId);
+  const plans = developmentGuidance(resolved, ctx.ageMonths, ctx.lang, query);
+  const relevant = plans.length ? plans.flatMap((plan) => plan.milestones)
+    : relevantItems(MILESTONES.filter((item) => stageAge(item.ageStageId) <= ctx.ageMonths), resolved, ctx, (item) => item.title).slice(0, 4);
+  const reference = relevant.length ? relevant : MILESTONES.filter((item) => item.ageStageId === ctx.currentStageId && stageAge(item.ageStageId) <= ctx.ageMonths);
   return [
     'Educational child-development support, not diagnosis. Respond in the requested language.',
     'Use only the reference below for medical claims. Ask a focused clarification for uncovered topics.',
     'Reference ages are not a diagnosis. Do not apply future-age warnings to a younger child.',
-    'Do not infer a disorder or recommend waiting when a parent reports a missing skill or regression.',
+    `Child age for this answer: ${ctx.ageMonths} months. Lead with what is expected at this age, then give activities for current abilities.`,
+    'Distinguish meaningful words from babbling, supported from independent sitting, and supported from independent walking.',
+    'A skill not yet expected is not impossible. Do not promise an exact starting age or mistake absence of future skills for delay.',
+    'Do not infer a disorder. Missing age-appropriate skills, hearing concerns or regression need assessment; early-age reassurance must not conceal them.',
+    'Only explain later milestone timing if the parent asks when; do not dump future checklists into coaching answers.',
     ...reference.map((item) => `Reference skill at ${stageAge(item.ageStageId)} months: ${item.title[ctx.lang]}`),
     ruleBasedReply(query, ctx, history),
   ].join('\n');

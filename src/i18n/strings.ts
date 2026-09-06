@@ -70,6 +70,7 @@ const strings = {
   chatError: { ar: 'حصل خطأ أثناء الرد. سؤالك رجع لخانة الكتابة عشان تقدري تحاولي تاني.', en: 'Something went wrong. Your question is back in the input so you can retry.' },
   chatOverviewQuestion: { ar: 'إيه المهارات المناسبة لعمره؟', en: 'What milestones fit this age?' },
   chatSpeechQuestion: { ar: 'إزاي أساعده يتكلم؟', en: 'How can I help with speech?' },
+  chatBabblingQuestion: { ar: 'إزاي أشجّع المناغاة والتواصل؟', en: 'How can I encourage babbling and communication?' },
   chatRemainingQuestion: { ar: 'إيه المهارات المتبقية في المرحلة دي؟', en: 'What are the remaining skills in this stage?' },
   chatThinking: { ar: 'جاري تجهيز الرد…', en: 'Preparing a reply…' },
 
