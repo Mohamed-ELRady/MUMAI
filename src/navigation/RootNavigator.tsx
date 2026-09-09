@@ -10,6 +10,8 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import HomeScreen from '../screens/HomeScreen';
 import StageDetailScreen from '../screens/StageDetailScreen';
 import ChatScreen from '../screens/ChatScreen';
+import WeeklyPlanScreen from '../screens/WeeklyPlanScreen';
+import ReportScreen from '../screens/ReportScreen';
 import { colors } from '../theme/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -55,6 +57,8 @@ export default function RootNavigator() {
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: t('appName') }} />
         <Stack.Screen name="StageDetail" component={StageDetailScreen} options={{ title: t('stageDetailTitle') }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('chatTitle') }} />
+        <Stack.Screen name="WeeklyPlan" component={WeeklyPlanScreen} options={{ title: t('weeklyPlanTitle') }} />
+        <Stack.Screen name="Report" component={ReportScreen} options={{ title: t('reportTitle') }} />
       </Stack.Navigator>
     </NavigationContainer>
     </SafeAreaView>

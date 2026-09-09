@@ -34,7 +34,7 @@ let msgCounter = 0;
 const nextId = () => String(msgCounter++);
 
 export default function ChatScreen({ route }: Props) {
-  const { profile, completedMilestoneIds } = useAppStore();
+  const { profile, completedMilestoneIds, milestoneStatuses, recordQuestion } = useAppStore();
   const { t, lang, isRTL } = useLanguage();
   const textAlign = isRTL ? 'right' : 'left';
   const rowDir = isRTL ? 'row-reverse' : 'row';
@@ -55,6 +55,7 @@ export default function ChatScreen({ route }: Props) {
     const text = (suggestion ?? input).trim();
     if (!text || sending.current) return;
     sending.current = true;
+    recordQuestion(text);
     setInput('');
     setMessages((m) => [...m, { id: nextId(), role: 'user', text, lang }]);
     setLoading(true);
@@ -65,6 +66,7 @@ export default function ChatScreen({ route }: Props) {
         currentStageId: stageId,
         lang,
         completedMilestoneIds,
+        milestoneStatuses,
       }, messages);
       if (mounted.current) setMessages((m) => [...m, { id: nextId(), role: 'assistant', lang, ...reply }]);
     } catch {

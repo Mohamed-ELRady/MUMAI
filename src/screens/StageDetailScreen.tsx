@@ -6,6 +6,7 @@ import { useAppStore } from '../store/AppStore';
 import { useLanguage } from '../i18n/LanguageContext';
 import { AGE_STAGES, MILESTONES, RED_FLAGS, DOMAIN_LABELS, Domain } from '../data/milestones';
 import { colors, spacing, radii, severityColors, severityStringKey } from '../theme/theme';
+import { MilestoneStatus } from '../store/persistedState';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StageDetail'>;
 
@@ -14,7 +15,7 @@ const DOMAIN_ORDER: Domain[] = ['gross_motor', 'fine_motor', 'language', 'social
 export default function StageDetailScreen({ route, navigation }: Props) {
   const { stageId } = route.params;
   const stage = AGE_STAGES.find((s) => s.id === stageId);
-  const { completedMilestoneIds, toggleMilestone } = useAppStore();
+  const { milestoneStatuses, setMilestoneStatus } = useAppStore();
   const { t, pick, isRTL } = useLanguage();
   const [showRedFlags, setShowRedFlags] = useState(false);
   const textAlign = isRTL ? 'right' : 'left';
@@ -30,8 +31,11 @@ export default function StageDetailScreen({ route, navigation }: Props) {
 
   const redFlags = RED_FLAGS.filter((rf) => rf.ageStageId === stageId);
   const unmetCount = MILESTONES.filter(
-    (m) => m.ageStageId === stageId && !completedMilestoneIds.includes(m.id)
+    (m) => m.ageStageId === stageId && milestoneStatuses[m.id] !== 'achieved'
   ).length;
+  const choices: { status: MilestoneStatus; label: 'statusAchieved' | 'statusEmerging' | 'statusNotObserved' }[] = [
+    { status: 'achieved', label: 'statusAchieved' }, { status: 'emerging', label: 'statusEmerging' }, { status: 'not_observed', label: 'statusNotObserved' },
+  ];
 
   if (!stage) return <View style={{ padding: spacing.lg }}><Text style={{ textAlign }}>{t('invalidStage')}</Text></View>;
 
@@ -47,23 +51,20 @@ export default function StageDetailScreen({ route, navigation }: Props) {
           <View key={domain} style={styles.domainSection}>
             <Text style={[styles.domainTitle, { textAlign }]}>{pick(DOMAIN_LABELS[domain])}</Text>
             {list.map((m) => {
-              const done = completedMilestoneIds.includes(m.id);
+              const selected = milestoneStatuses[m.id];
               return (
-                <Pressable
-                  key={m.id}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: done }}
-                  accessibilityLabel={pick(m.title)}
-                  style={[styles.milestoneRow, { flexDirection: rowDir }]}
-                  onPress={() => toggleMilestone(m.id)}
-                >
-                  <View style={[styles.checkbox, done && styles.checkboxDone]}>
-                    {done && <Text style={styles.checkmark}>✓</Text>}
+                <View key={m.id} style={styles.milestoneRow}>
+                  <Text style={[styles.milestoneText, { textAlign }]}>{pick(m.title)}</Text>
+                  <View accessibilityRole="radiogroup" style={[styles.statusRow, { flexDirection: rowDir }]}>
+                    {choices.map((choice) => {
+                      const active = selected === choice.status;
+                      return <Pressable key={choice.status} accessibilityRole="radio" accessibilityState={{ selected: active }} accessibilityLabel={`${pick(m.title)}: ${t(choice.label)}`}
+                        onPress={() => setMilestoneStatus(m.id, choice.status)} style={[styles.statusChip, active && styles[`status_${choice.status}`]]}>
+                        <Text style={[styles.statusChipText, active && styles.statusChipTextActive]}>{t(choice.label)}</Text>
+                      </Pressable>;
+                    })}
                   </View>
-                  <Text style={[styles.milestoneText, { textAlign }, done && styles.milestoneTextDone]}>
-                    {pick(m.title)}
-                  </Text>
-                </Pressable>
+                </View>
               );
             })}
           </View>
@@ -117,7 +118,6 @@ const styles = StyleSheet.create({
   domainSection: { marginBottom: spacing.lg },
   domainTitle: { fontSize: 15, fontWeight: '700', color: colors.primaryDark, marginBottom: spacing.sm },
   milestoneRow: {
-    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -125,20 +125,14 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginBottom: spacing.xs,
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: radii.sm,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: spacing.sm,
-  },
-  checkboxDone: { backgroundColor: colors.primary },
-  checkmark: { color: '#fff', fontWeight: '700' },
-  milestoneText: { flex: 1, fontSize: 14, color: colors.text },
-  milestoneTextDone: { color: colors.textMuted, textDecorationLine: 'line-through' },
+  milestoneText: { fontSize: 14, color: colors.text, fontWeight: '600', marginBottom: spacing.sm },
+  statusRow: { gap: spacing.xs },
+  statusChip: { flex: 1, minHeight: 42, borderWidth: 1, borderColor: colors.border, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, paddingVertical: spacing.xs },
+  status_achieved: { backgroundColor: colors.success, borderColor: colors.success },
+  status_emerging: { backgroundColor: colors.warning, borderColor: colors.warning },
+  status_not_observed: { backgroundColor: colors.urgent, borderColor: colors.urgent },
+  statusChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  statusChipTextActive: { color: '#fff' },
   askButton: {
     backgroundColor: colors.chipBg,
     borderRadius: radii.md,

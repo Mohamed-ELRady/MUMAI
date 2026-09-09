@@ -34,6 +34,8 @@ yarn-error.*
 .env
 .env.*
 !.env.example
+model-proxy/.dev.vars*
+!model-proxy/.dev.vars.example
 
 # typescript
 *.tsbuildinfo

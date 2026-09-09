@@ -12,7 +12,7 @@ import { colors, spacing, radii } from '../theme/theme';
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
-  const { profile, completedMilestoneIds } = useAppStore();
+  const { profile, completedMilestoneIds, milestoneStatuses } = useAppStore();
   const { t, pick, lang, isRTL } = useLanguage();
   const textAlign = isRTL ? 'right' : 'left';
   const rowDir = isRTL ? 'row-reverse' : 'row';
@@ -42,6 +42,17 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={[styles.chatBannerText, { textAlign }]}>{t('chatBanner')}</Text>
       </Pressable>
 
+      <View style={[styles.actionRow, { flexDirection: rowDir }]}>
+        <Pressable accessibilityRole="button" style={styles.actionCard} onPress={() => navigation.navigate('WeeklyPlan')}>
+          <Text style={[styles.actionTitle, { textAlign }]}>{t('weeklyPlanCard')}</Text>
+          <Text style={[styles.actionHint, { textAlign }]}>{t('weeklyPlanCardHint')}</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" style={styles.actionCard} onPress={() => navigation.navigate('Report')}>
+          <Text style={[styles.actionTitle, { textAlign }]}>{t('reportCard')}</Text>
+          <Text style={[styles.actionHint, { textAlign }]}>{t('reportCardHint')}</Text>
+        </Pressable>
+      </View>
+
       <FlatList
         data={AGE_STAGES}
         keyExtractor={(s) => s.id}
@@ -49,6 +60,7 @@ export default function HomeScreen({ navigation }: Props) {
         renderItem={({ item }) => {
           const stageMilestones = MILESTONES.filter((m) => m.ageStageId === item.id);
           const doneCount = stageMilestones.filter((m) => completedMilestoneIds.includes(m.id)).length;
+          const recordedCount = stageMilestones.filter((m) => milestoneStatuses[m.id]).length;
           const isCurrent = item.id === currentStage.id;
           const isPast = stageIndex(item.id) < stageIndex(currentStage.id);
           const isFuture = item.minMonths > ageMonths;
@@ -69,7 +81,7 @@ export default function HomeScreen({ navigation }: Props) {
                   {pick(item.label)}
                 </Text>
                 <Text style={[styles.stageProgress, { textAlign }]}>
-                  {doneCount}/{stageMilestones.length} {t('skillsUnit')}
+                  {t('stageTrackingProgress', { recorded: recordedCount, total: stageMilestones.length, achieved: doneCount })}
                   {isFuture ? ` · ${t('notDueYet')}` : ''}
                 </Text>
               </View>
@@ -100,6 +112,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   chatBannerText: { color: colors.primaryDark, fontSize: 14, fontWeight: '600' },
+  actionRow: { gap: spacing.sm, marginBottom: spacing.md },
+  actionCard: { flex: 1, minHeight: 86, backgroundColor: '#EAF5F2', borderRadius: radii.md, borderWidth: 1, borderColor: '#CBE4DE', padding: spacing.md, justifyContent: 'center' },
+  actionTitle: { color: '#39796C', fontSize: 15, fontWeight: '800' },
+  actionHint: { color: colors.textMuted, fontSize: 11, marginTop: spacing.xs, lineHeight: 16 },
   stageCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.md,

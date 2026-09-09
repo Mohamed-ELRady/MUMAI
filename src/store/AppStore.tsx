@@ -1,18 +1,23 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MILESTONES } from '../data/milestones';
-import { BabyProfile, PersistedState, createWriteQueue, defaultState, restoreState, validateProfile } from './persistedState';
-export type { BabyProfile } from './persistedState';
+import { BabyProfile, MilestoneStatus, Observation, PersistedState, createWriteQueue, defaultState, restoreState, validateProfile } from './persistedState';
+export type { BabyProfile, MilestoneStatus, Observation, SavedQuestion } from './persistedState';
 
 const STORAGE_KEY = 'mumai:v1';
 const persist = createWriteQueue((value) => AsyncStorage.setItem(STORAGE_KEY, value));
 
 interface AppStoreValue extends PersistedState {
+  completedMilestoneIds: string[];
   isLoading: boolean;
   storageError: 'load' | 'save' | null;
   retryStorage: () => void;
   setProfile: (profile: BabyProfile) => void;
-  toggleMilestone: (milestoneId: string) => void;
+  setMilestoneStatus: (milestoneId: string, status: MilestoneStatus) => void;
+  toggleWeeklyActivity: (weekKey: string, activityId: string) => void;
+  addObservation: (text: string, milestoneId?: string) => void;
+  removeObservation: (id: string) => void;
+  recordQuestion: (text: string) => void;
   isMilestoneDone: (milestoneId: string) => boolean;
   resetProfile: () => void;
 }
@@ -58,7 +63,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   }
 
   const value = useMemo<AppStoreValue>(() => ({
-    ...state, isLoading, storageError,
+    ...state, completedMilestoneIds: Object.keys(state.milestoneStatuses).filter((id) => state.milestoneStatuses[id] === 'achieved'), isLoading, storageError,
     retryStorage: () => {
       if (storageError === 'load' && revision === 0) {
         setIsLoading(true);
@@ -71,17 +76,42 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       setState((previous) => ({ ...previous, profile: valid }));
       markChanged();
     },
-    toggleMilestone: (milestoneId) => {
+    setMilestoneStatus: (milestoneId, status) => {
       if (isLoading || !state.profile || !MILESTONES.some((item) => item.id === milestoneId)) return;
       setState((previous) => ({
         ...previous,
-        completedMilestoneIds: previous.completedMilestoneIds.includes(milestoneId)
-          ? previous.completedMilestoneIds.filter((id) => id !== milestoneId)
-          : [...previous.completedMilestoneIds, milestoneId],
+        milestoneStatuses: { ...previous.milestoneStatuses, [milestoneId]: status },
       }));
       markChanged();
     },
-    isMilestoneDone: (id) => state.completedMilestoneIds.includes(id),
+    toggleWeeklyActivity: (weekKey, activityId) => {
+      if (isLoading || !state.profile || !/^\d{4}-\d{2}-\d{2}$/.test(weekKey)) return;
+      setState((previous) => {
+        const current = previous.weeklyActivityChecks[weekKey] ?? [];
+        return { ...previous, weeklyActivityChecks: { ...previous.weeklyActivityChecks,
+          [weekKey]: current.includes(activityId) ? current.filter((id) => id !== activityId) : [...current, activityId] } };
+      });
+      markChanged();
+    },
+    addObservation: (text, milestoneId) => {
+      const clean = text.trim().slice(0, 1000);
+      if (isLoading || !state.profile || !clean) return;
+      setState((previous) => ({ ...previous, observations: [...previous.observations, {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, text: clean, createdAt: new Date().toISOString(),
+        milestoneId: milestoneId && MILESTONES.some((item) => item.id === milestoneId) ? milestoneId : undefined,
+      }].slice(-100) }));
+      markChanged();
+    },
+    removeObservation: (id) => { setState((previous) => ({ ...previous, observations: previous.observations.filter((item) => item.id !== id) })); markChanged(); },
+    recordQuestion: (text) => {
+      const clean = text.trim().slice(0, 2000);
+      if (isLoading || !state.profile || !clean) return;
+      setState((previous) => ({ ...previous, savedQuestions: [...previous.savedQuestions, {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, text: clean, createdAt: new Date().toISOString(),
+      }].slice(-50) }));
+      markChanged();
+    },
+    isMilestoneDone: (id) => state.milestoneStatuses[id] === 'achieved',
     resetProfile: () => { setState(defaultState); markChanged(); },
   }), [state, isLoading, storageError, revision]);
 

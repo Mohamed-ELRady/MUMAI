@@ -36,15 +36,23 @@ const strings = {
     en: 'Have a question about a specific stage? Ask the assistant 💬',
   },
   skillsUnit: { ar: 'مهارة', en: 'skills' },
+  stageTrackingProgress: { ar: '{recorded}/{total} متابعة · {achieved} بيعملها', en: '{recorded}/{total} recorded · {achieved} doing' },
   notDueYet: { ar: 'لسه مجاش وقتها', en: 'Not due yet' },
   currentStageBadge: { ar: 'المرحلة الحالية', en: 'Current stage' },
+  weeklyPlanCard: { ar: 'خطة الأسبوع', en: 'Weekly plan' },
+  weeklyPlanCardHint: { ar: '٣ لحظات لعب مناسبة لعمره', en: '3 age-appropriate play moments' },
+  reportCard: { ar: 'تقرير الطبيب', en: 'Doctor report' },
+  reportCardHint: { ar: 'ملخص المهارات والملاحظات', en: 'Skills and observations summary' },
 
   // Stage detail
   stageDetailSubtitle: {
-    ar: 'علّمي على المهارات اللي طفلك بيعملها في المرحلة دي',
-    en: 'Check off the skills your child is doing at this stage',
+    ar: 'اختاري الوصف الأقرب لملاحظتك؛ الحالة مش تشخيص',
+    en: 'Choose the closest family observation; this is not a diagnosis',
   },
-  askAboutRemaining: { ar: 'فيه {n} مهارة لسه مش متعلّم عليها — اسألي عنها', en: '{n} unchecked skills — ask about them' },
+  statusAchieved: { ar: 'بيعملها', en: 'Doing it' },
+  statusEmerging: { ar: 'بيحاول', en: 'Trying' },
+  statusNotObserved: { ar: 'لسه ملاحظتهاش', en: 'Not observed yet' },
+  askAboutRemaining: { ar: 'فيه {n} مهارة محتاجة متابعة — اسألي عنها', en: '{n} skills need follow-up — ask about them' },
   showRedFlags: { ar: 'عرض علامات تستحق انتباه في المرحلة دي ({n})', en: 'Show signs worth attention at this stage ({n})' },
   hideRedFlags: { ar: 'إخفاء علامات تستحق انتباه في المرحلة دي ({n})', en: 'Hide signs worth attention at this stage ({n})' },
   possibleCausesLabel: { ar: 'الأسباب المحتملة:', en: 'Possible causes:' },
@@ -73,6 +81,30 @@ const strings = {
   chatBabblingQuestion: { ar: 'إزاي أشجّع المناغاة والتواصل؟', en: 'How can I encourage babbling and communication?' },
   chatRemainingQuestion: { ar: 'إيه المهارات المتبقية في المرحلة دي؟', en: 'What are the remaining skills in this stage?' },
   chatThinking: { ar: 'جاري تجهيز الرد…', en: 'Preparing a reply…' },
+
+  // Weekly plan
+  weeklyPlanTitle: { ar: 'خطة الأسبوع', en: 'Weekly plan' },
+  weeklyPlanIntro: { ar: '٣ لحظات قصيرة متفصلة على عمر طفلك والمهارات اللي بيمارسها. كرري كل لعبة وقت ما يكون مرتاح ومتفاعل.', en: 'Three short moments based on your child’s age and developing skills. Repeat each activity when your child is comfortable and engaged.' },
+  weeklyFocus: { ar: 'بنركّز على:', en: 'Focus:' },
+  weeklyDone: { ar: 'اتعملت الأسبوع ده', en: 'Done this week' },
+  weeklyProgress: { ar: '{done} من {total} اتعملوا', en: '{done} of {total} done' },
+  weeklySafety: { ar: 'كل الأنشطة تحت إشرافك. وقّفي النشاط لو طفلك تعب أو اتضايق، وماتجبريهوش على وضع أو حركة.', en: 'Supervise every activity. Stop if your child is tired or upset, and never force a position or movement.' },
+
+  // Report
+  reportTitle: { ar: 'تقرير الطبيب', en: 'Doctor report' },
+  reportIntro: { ar: 'ملخص ملاحظاتك عن المرحلة الحالية. راجعيه قبل الطباعة أو المشاركة مع الطبيب.', en: 'A summary of your observations for the current stage. Review it before printing or sharing with the doctor.' },
+  reportCounts: { ar: 'بيعملها {done} · بيحاول {emerging} · لسه ملاحظناهاش {notObserved}', en: 'Doing {done} · Trying {emerging} · Not observed {notObserved}' },
+  reportObservations: { ar: 'ملاحظات الأسرة', en: 'Family observations' },
+  reportObservationPlaceholder: { ar: 'مثال: بدأ يقول «با» من أسبوع، لكنه لا يلتفت للصوت الهادئ…', en: 'Example: Started saying “ba” last week, but does not turn toward quiet sounds…' },
+  reportAddObservation: { ar: 'إضافة الملاحظة', en: 'Add observation' },
+  reportNoObservations: { ar: 'لسه مفيش ملاحظات. اكتبي أمثلة واضحة وتاريخ بداية التغيير عشان تفيد الطبيب.', en: 'No observations yet. Add concrete examples and when a change began to help the doctor.' },
+  reportQuestions: { ar: 'الأسئلة اللي سألتيها', en: 'Questions you asked' },
+  reportNoQuestions: { ar: 'لسه مفيش أسئلة محفوظة من الشات.', en: 'No chat questions have been saved yet.' },
+  reportDeleteObservation: { ar: 'حذف', en: 'Delete' },
+  reportExport: { ar: 'طباعة أو حفظ PDF', en: 'Print or save PDF' },
+  reportShare: { ar: 'مشاركة PDF', en: 'Share PDF' },
+  reportExportError: { ar: 'تعذّر تجهيز التقرير. جرّبي مرة تانية.', en: 'The report could not be prepared. Try again.' },
+  reportDisclaimer: { ar: 'التقرير بيلخّص ملاحظات الأسرة، ومش تشخيص أو اختبار نمو معتمد.', en: 'This report summarizes family observations; it is not a diagnosis or validated screening test.' },
 
   // Navigation
   backButton: { ar: 'رجوع', en: 'Back' },

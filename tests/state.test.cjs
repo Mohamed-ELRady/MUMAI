@@ -38,8 +38,11 @@ test('restoration rejects corrupt profiles and removes unknown or duplicate chec
   const profile = { name: '  يوسف  ', birthDateISO: '2024-01-02' };
   const restored = restoreState(JSON.stringify({ profile, completedMilestoneIds: ['ms-m1-1', 'ms-m1-1', 42, null, 'unknown', 'ms-m9-3'] }));
   assert.equal(restored.profile.name, 'يوسف');
-  assert.deepEqual(restored.completedMilestoneIds, ['ms-m1-1']);
-  assert.deepEqual(restoreState(null), { profile: null, completedMilestoneIds: [] });
+  assert.deepEqual(restored.milestoneStatuses, { 'ms-m1-1': 'achieved' });
+  assert.deepEqual(restored.weeklyActivityChecks, {});
+  assert.deepEqual(restored.observations, []);
+  assert.deepEqual(restored.savedQuestions, []);
+  assert.deepEqual(restoreState(null), { profile: null, milestoneStatuses: {}, weeklyActivityChecks: {}, observations: [], savedQuestions: [] });
   for (const raw of ['{broken', 'null', '[]', '{"profile":42}', '{"profile":{"name":"x","birthDateISO":"tomorrow"}}']) assert.throws(() => restoreState(raw));
   assert.equal(validateProfile({ name: ' ', birthDateISO: '2024-01-02' }), null);
 });
@@ -48,6 +51,24 @@ test('legacy timestamp profiles migrate to a calendar birthday', () => {
   const date = new Date(2024, 0, 2, 12);
   const restored = restoreState(JSON.stringify({ profile: { name: 'Y', birthDateISO: date.toISOString() }, completedMilestoneIds: [] }));
   assert.equal(restored.profile.birthDateISO, '2024-01-02');
+});
+
+test('restoration validates status, weekly activity and observation records', () => {
+  const raw = JSON.stringify({
+    profile: { name: 'Y', birthDateISO: '2024-01-31' },
+    milestoneStatuses: { 'ms-m1-1': 'emerging', 'ms-m1-2': 'bad', unknown: 'achieved' },
+    weeklyActivityChecks: { '2026-09-07': ['weekly-a', 'weekly-a', 5], bad: ['x'] },
+    observations: [
+      { id: 'n1', text: '  بدأ يبتسم  ', createdAt: '2026-09-09T10:00:00.000Z', milestoneId: 'ms-m1-1' },
+      { id: 'n2', text: '', createdAt: 'bad' },
+    ],
+    savedQuestions: [{ id: 'q1', text: '  إمتى يبدأ الكلام؟ ', createdAt: '2026-09-09T11:00:00.000Z' }, { id: 'bad', text: '', createdAt: 'bad' }],
+  });
+  const restored = restoreState(raw);
+  assert.deepEqual(restored.milestoneStatuses, { 'ms-m1-1': 'emerging' });
+  assert.deepEqual(restored.weeklyActivityChecks, { '2026-09-07': ['weekly-a'] });
+  assert.deepEqual(restored.observations, [{ id: 'n1', text: 'بدأ يبتسم', createdAt: '2026-09-09T10:00:00.000Z', milestoneId: 'ms-m1-1' }]);
+  assert.deepEqual(restored.savedQuestions, [{ id: 'q1', text: 'إمتى يبدأ الكلام؟', createdAt: '2026-09-09T11:00:00.000Z' }]);
 });
 
 test('serialized writes preserve the newest state even if a previous write fails', async () => {

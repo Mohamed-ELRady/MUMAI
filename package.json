@@ -8,7 +8,9 @@
     "@react-native-community/datetimepicker": "9.1.0",
     "@react-navigation/native": "^7.3.16",
     "@react-navigation/native-stack": "^7.18.8",
-    "expo": "^57.0.20",
+    "expo": "~57.0.21",
+    "expo-print": "~57.0.1",
+    "expo-sharing": "~57.0.18",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -21,7 +23,8 @@
     "@types/react": "~19.2.4",
     "gh-pages": "^6.3.0",
     "patch-package": "^8.0.1",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "wrangler": "4.130.0"
   },
   "scripts": {
     "start": "expo start",
@@ -30,11 +33,13 @@
     "web": "expo start --web",
     "deploy": "npm run build:web && gh-pages -d dist --nojekyll",
     "typecheck": "tsc --noEmit",
-    "test": "node --require ./tests/register.cjs --test tests/*.test.cjs",
+    "test": "node --require ./tests/register.cjs --test tests/*.test.cjs tests/*.test.mjs",
     "build:web": "expo export --platform web",
     "check": "npm run typecheck && npm test && npm run build:web",
     "postinstall": "patch-package",
-    "predeploy": "npm run typecheck && npm test"
+    "predeploy": "npm run typecheck && npm test",
+    "proxy:dev": "wrangler dev --config model-proxy/wrangler.jsonc",
+    "proxy:deploy": "wrangler deploy --config model-proxy/wrangler.jsonc"
   },
   "private": true,
   "engines": {
@@ -46,6 +51,7 @@
     },
     "@react-navigation/core": {
       "query-string": "9.5.1"
-    }
+    },
+    "sharp": "0.35.4"
   }
 }

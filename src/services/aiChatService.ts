@@ -11,6 +11,7 @@ export interface ChatContext {
   currentStageId: string;
   lang: Lang;
   completedMilestoneIds?: string[];
+  milestoneStatuses?: Record<string, 'achieved' | 'emerging' | 'not_observed'>;
 }
 
 export interface AssistantResponse {
@@ -219,6 +220,12 @@ export function buildGrounding(query: string, originalContext: ChatContext, hist
     'A skill not yet expected is not impossible. Do not promise an exact starting age or mistake absence of future skills for delay.',
     'Do not infer a disorder. Missing age-appropriate skills, hearing concerns or regression need assessment; early-age reassurance must not conceal them.',
     'Only explain later milestone timing if the parent asks when; do not dump future checklists into coaching answers.',
+    'Trusted sources: CDC milestone index https://www.cdc.gov/act-early/milestones/index.html',
+    'Trusted urgent-care source: NHS https://www.nhs.uk/baby/health/when-to-get-urgent-medical-help-for-babies-and-children-under-5/',
+    ...Object.entries(ctx.milestoneStatuses ?? {}).map(([id, status]) => {
+      const item = MILESTONES.find((milestone) => milestone.id === id);
+      return `Family observation: ${item?.title[ctx.lang] ?? id} = ${status}`;
+    }),
     ...reference.map((item) => `Reference skill at ${stageAge(item.ageStageId)} months: ${item.title[ctx.lang]}`),
     ruleBasedReply(query, ctx, history),
   ].join('\n');

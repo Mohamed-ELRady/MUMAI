@@ -3,4 +3,6 @@ export type RootStackParamList = {
   Home: undefined;
   StageDetail: { stageId: string };
   Chat: { stageId?: string; askRemaining?: boolean } | undefined;
+  WeeklyPlan: undefined;
+  Report: undefined;
 };
