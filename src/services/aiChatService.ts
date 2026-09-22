@@ -4,6 +4,7 @@ import { conceptsIn, hasPhrase, normalizeArabic, overlapScore } from './textMatc
 import { ageInQuery, ConversationMessage, isConcern, isFollowUp, resolveConversation, urgentKind } from './chatUnderstanding';
 import strings, { Lang } from '../i18n/strings';
 import { asksAboutTiming, developmentGuidance } from './developmentGuidance';
+import { asksForSpecialist, hasTargetedSpecialty, specialtyRecommendation } from './specialtyGuidance';
 
 export interface ChatContext {
   babyName?: string;
@@ -24,6 +25,10 @@ export const MAX_QUERY_LENGTH = 2000;
 export const PROXY_TIMEOUT_MS = 12000;
 const CDC_SOURCE = 'https://www.cdc.gov/act-early/milestones/index.html';
 const URGENT_SOURCE = 'https://www.nhs.uk/baby/health/when-to-get-urgent-medical-help-for-babies-and-children-under-5/';
+const EARLY_INTERVENTION_SOURCE = 'https://www.cdc.gov/act-early/early-intervention/index.html';
+const LANGUAGE_REFERRAL_SOURCE = 'https://www.healthychildren.org/English/ages-stages/toddler/Pages/Language-Delay.aspx';
+const DEVELOPMENTAL_SPECIALIST_SOURCE = 'https://www.healthychildren.org/English/family-life/health-management/pediatric-specialists/Pages/What-is-a-Developmental-Behavioral-Pediatrician.aspx';
+const MOTOR_REFERRAL_SOURCE = 'https://publications.aap.org/pediatrics/article/131/6/e2016/31072/Motor-Delays-Early-Identification-and-Evaluation';
 
 function bilingual(ctx: ChatContext, ar: string, en: string): string {
   return ctx.lang === 'ar' ? ar : en;
@@ -86,7 +91,9 @@ function supportTip(query: string, ctx: ChatContext): string {
 }
 
 function finish(text: string, ctx: ChatContext, source = CDC_SOURCE): string {
-  return `${text}\n\n${strings.chatDisclaimer[ctx.lang]}\n${bilingual(ctx, 'المصدر:', 'Source:')} ${source}`;
+  const specialistSources = text.includes('مسار التقييم المقترح') || text.includes('Suggested assessment route')
+    ? `\n${EARLY_INTERVENTION_SOURCE}\n${LANGUAGE_REFERRAL_SOURCE}` : '';
+  return `${text}\n\n${strings.chatDisclaimer[ctx.lang]}\n${bilingual(ctx, 'المصدر:', 'Source:')} ${source}${specialistSources}`;
 }
 
 export function ruleBasedReply(query: string, originalContext: ChatContext, history: ConversationMessage[] = []): string {
@@ -98,8 +105,8 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
     'لو طفلك عنده العلامة دي دلوقتي، زي صعوبة التنفس أو فقدان الوعي أو تشنج، اتصلي بالإسعاف المحلي أو روحي الطوارئ فورًا. ما تستنيش رد الشات أو موعد متابعة النمو.',
     'If your child has this symptom now, such as breathing difficulty, loss of consciousness or a seizure, call local emergency services or go to emergency care immediately. Do not wait for this chat or a development appointment.'), ctx, URGENT_SOURCE);
   if (urgent === 'regression') return finish(bilingual(ctx,
-    'فقدان مهارة كان طفلك بيعملها قبل كده محتاج تقييم طبي سريع في أي عمر. تواصلي مع طبيب الأطفال في أقرب وقت واذكري إيه المهارة اللي اختفت وإمتى بدأ التغيير. لو التغيير مفاجئ ومعاه صعوبة تنفس أو فقدان وعي أو تشنج، روحي الطوارئ فورًا.',
-    'Losing a previously acquired skill needs prompt medical assessment at any age. Contact the pediatrician as soon as possible and explain which skill was lost and when. Sudden change with breathing difficulty, loss of consciousness or a seizure needs emergency care.'), ctx);
+    'فقدان مهارة كان طفلك بيعملها قبل كده محتاج تقييم طبي سريع في أي عمر. تواصلي مع طبيب الأطفال في أقرب وقت؛ وقد يحتاج إحالة عاجلة إلى أعصاب أطفال أو طب نمو أطفال حسب الفحص. اذكري إيه المهارة اللي اختفت وإمتى بدأ التغيير. لو التغيير مفاجئ ومعاه صعوبة تنفس أو فقدان وعي أو تشنج، روحي الطوارئ فورًا.',
+    'Losing a previously acquired skill needs prompt medical assessment at any age. Contact the pediatrician as soon as possible; the exam may prompt an urgent referral to pediatric neurology or developmental pediatrics. Explain which skill was lost and when. Sudden change with breathing difficulty, loss of consciousness or a seizure needs emergency care.'), ctx);
 
   const normalized = normalizeArabic(query);
   if (/^(اهلا|اهلين|مرحبا|السلام عليكم|هاي|hi|hello|hey)$/.test(normalized)) return bilingual(ctx,
@@ -113,6 +120,8 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
     'المراحل الموجودة هنا بتغطي من الولادة لحد 5 سنين. لطفل أكبر من كده، طبيب الأطفال يقدر يراجع المهارات المناسبة لعمره. قولي إيه التغيير اللي لاحظتيه، خصوصًا لو فيه فقدان مهارة قديمة.',
     'The checklists here cover birth through age 5. For an older child, a pediatrician can review age-appropriate skills. Describe the change you noticed, especially any loss of a previously acquired skill.'), ctx);
 
+  const specialty = specialtyRecommendation(resolved, ctx);
+  if (specialty && asksForSpecialist(resolved) && hasTargetedSpecialty(specialty)) return finish(specialty, ctx);
   const plans = developmentGuidance(resolved, ctx.ageMonths, ctx.lang, query);
   if (plans.length) {
     const lines = [bilingual(ctx,
@@ -142,13 +151,14 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
         'لو مش بيستجيب للأصوات، اطلبي تقييم السمع؛ ما تستنيش ظهور الكلمات.',
         'If sounds get no response, ask for a hearing assessment; do not wait for words to appear.'));
     }
+    if (specialty) lines.push(specialty);
     lines.push(...plans.map((plan) => plan.question));
     return finish(lines.join('\n\n'), ctx);
   }
 
-  if (conceptsIn(resolved).includes('crawling')) return finish(bilingual(ctx,
+  if (conceptsIn(resolved).includes('crawling')) return finish([bilingual(ctx,
     'الأطفال بيتحركوا بطرق مختلفة، وفيه أطفال بيتخطوا الزحف. غياب الزحف لوحده ما يكفيش للحكم على النمو. تابعي الجلوس والحركة واستخدام الناحيتين، ووفّري لعبًا آمنًا على الأرض تحت إشرافك. لو طفلك مش بيجلس من غير مساندة عند 9 شهور، أو عندك قلق عن حركته، ناقشي ده مع طبيب الأطفال.',
-    'Babies move in different ways, and some skip crawling. Crawling alone cannot establish whether development is on track. Watch sitting, movement and use of both sides, and offer supervised floor play. Discuss missing unsupported sitting at 9 months, or any movement concern, with the pediatrician.'), ctx,
+    'Babies move in different ways, and some skip crawling. Crawling alone cannot establish whether development is on track. Watch sitting, movement and use of both sides, and offer supervised floor play. Discuss missing unsupported sitting at 9 months, or any movement concern, with the pediatrician.'), specialty].filter(Boolean).join('\n\n'), ctx,
     'https://www.healthychildren.org/English/ages-stages/baby/Pages/Movement-8-to-12-Months.aspx');
 
   const remaining = ['المهارات المتبقية', 'المهارات اللي معملهاش', 'remaining', 'unchecked'].some((phrase) => hasPhrase(resolved, phrase));
@@ -171,6 +181,7 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
       'This guide lists that skill at an older age. Start with your child’s current abilities without expecting later-stage skills. What can your child do now?'),
     supportTip(resolved, ctx),
   ].join('\n\n'), ctx);
+  if (!milestones.length && specialty) return finish(`${intro}\n\n${specialty}`, ctx);
   if (!milestones.length) return bilingual(ctx,
     `أقدر أساعدك في مراحل نمو ${name}: الكلام، الحركة، السمع، اللعب والتواصل. سؤالك محتاج تفاصيل أكتر أو معلومات خارج دليل النمو هنا. إيه اللي لاحظتيه وإمتى بدأ؟ ممكن تبدأي بـ«إيه المهارات المناسبة لعمره؟». لو السؤال عن مرض أو دواء، تواصلي مع طبيب الأطفال لتقييمه.`,
     `I can help with ${name}’s speech, movement, hearing, play and communication. This question needs more detail or information beyond this development guide. What have you noticed, and when did it start? Try “What milestones fit this age?” For an illness or medicine question, contact the pediatrician for an assessment.`);
@@ -200,6 +211,7 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
       '\nلو مهارة مناسبة لعمره مش موجودة أو عندك قلق مستمر، تواصلي مع طبيب الأطفال واطلبي تقييم النمو. ما تستنيش فقدان مهارات تانية.',
       '\nIf an age-appropriate skill is missing or you are concerned, contact the pediatrician and ask about developmental screening. Do not wait for other skills to be lost.'));
   }
+  if (specialty) lines.push(`\n${specialty}`);
   lines.push(`\n${supportTip(resolved, ctx)}`);
   return finish(lines.join('\n'), ctx);
 }
@@ -219,9 +231,11 @@ export function buildGrounding(query: string, originalContext: ChatContext, hist
     'Distinguish meaningful words from babbling, supported from independent sitting, and supported from independent walking.',
     'A skill not yet expected is not impossible. Do not promise an exact starting age or mistake absence of future skills for delay.',
     'Do not infer a disorder. Missing age-appropriate skills, hearing concerns or regression need assessment; early-age reassurance must not conceal them.',
+    'When a parent asks which doctor or specialist to see, state the suggested assessment route from the local guidance: pediatrician first, followed by the relevant hearing, speech-language, physical therapy, occupational therapy, ophthalmology, developmental pediatrics or pediatric neurology referral. Do not replace that route with a diagnosis.',
     'Only explain later milestone timing if the parent asks when; do not dump future checklists into coaching answers.',
     'Trusted sources: CDC milestone index https://www.cdc.gov/act-early/milestones/index.html',
     'Trusted urgent-care source: NHS https://www.nhs.uk/baby/health/when-to-get-urgent-medical-help-for-babies-and-children-under-5/',
+    `Trusted referral sources: ${EARLY_INTERVENTION_SOURCE} ${LANGUAGE_REFERRAL_SOURCE} ${DEVELOPMENTAL_SPECIALIST_SOURCE} ${MOTOR_REFERRAL_SOURCE}`,
     ...Object.entries(ctx.milestoneStatuses ?? {}).map(([id, status]) => {
       const item = MILESTONES.find((milestone) => milestone.id === id);
       return `Family observation: ${item?.title[ctx.lang] ?? id} = ${status}`;
@@ -276,10 +290,16 @@ export async function getAssistantResponse(query: string, ctx: ChatContext, hist
   const boundedHistory = history.filter((message) => (message.role === 'user' || message.role === 'assistant') && typeof message.text === 'string')
     .slice(-12).map((message) => ({ role: message.role, text: message.text.slice(0, MAX_QUERY_LENGTH) }));
   const local = () => ruleBasedReply(text, ctx, boundedHistory);
-  if (!text || urgentKind(text)) return { text: local(), source: 'local' };
+  const resolved = resolveConversation(text, boundedHistory);
+  if (!text || urgentKind(text) || asksForSpecialist(resolved)) return { text: local(), source: 'local' };
   try {
     const url = proxyURL();
-    if (url) return { text: await callProxy(url, text, contextForQuery(text, ctx, boundedHistory), boundedHistory), source: 'proxy' };
+    if (url) {
+      const scoped = contextForQuery(text, ctx, boundedHistory);
+      const reply = await callProxy(url, text, scoped, boundedHistory);
+      const specialty = specialtyRecommendation(resolveConversation(text, boundedHistory), scoped);
+      return { text: specialty ? `${reply}\n\n${specialty}` : reply, source: 'proxy' };
+    }
   } catch {
     return { text: local(), source: 'local', connectionFailed: true };
   }

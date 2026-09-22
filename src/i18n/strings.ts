@@ -17,6 +17,14 @@ const strings = {
   childNameLabel: { ar: 'اسم الطفل', en: "Child's name" },
   childNamePlaceholder: { ar: 'مثلاً: يوسف', en: 'e.g. Youssef' },
   birthDateLabel: { ar: 'تاريخ الميلاد', en: 'Date of birth' },
+  optionalLabel: { ar: 'اختياري', en: 'Optional' },
+  childPhotoLabel: { ar: 'صورة الطفل', en: "Child's photo" },
+  addChildPhoto: { ar: 'إضافة صورة', en: 'Add photo' },
+  changeChildPhoto: { ar: 'تغيير الصورة', en: 'Change photo' },
+  removeChildPhoto: { ar: 'حذف الصورة', en: 'Remove photo' },
+  photoPickerError: { ar: 'تعذّر اختيار الصورة. جرّبي صورة تانية.', en: 'The photo could not be selected. Try another image.' },
+  bloodTypeLabel: { ar: 'فصيلة الدم', en: 'Blood type' },
+  optionalProfileHint: { ar: 'ممكن تسيبي البيانات دي دلوقتي وتضيفيها في أي وقت.', en: 'You can skip these details now and add them at any time.' },
   invalidBirthDate: { ar: 'اختاري تاريخ ميلاد صحيح، النهارده أو قبله.', en: 'Choose a valid birthday, today or earlier.' },
   storageLoadError: { ar: 'تعذّر قراءة البيانات المحفوظة. جرّبي تاني لاسترجاعها قبل تسجيل بيانات جديدة.', en: 'Saved data could not be read. Retry to recover it before entering a new profile.' },
   storageSaveError: { ar: 'التغييرات ظاهرة، لكن لسه متحفظتش على الجهاز. جرّبي الحفظ تاني.', en: 'Your changes are visible but have not been saved on this device. Please retry.' },
@@ -26,11 +34,17 @@ const strings = {
   saveChangesCta: { ar: 'حفظ التعديلات', en: 'Save changes' },
   editProfileTitle: { ar: 'تعديل بيانات الطفل', en: "Edit child's info" },
   defaultChildName: { ar: 'طفلي', en: 'my child' },
+  addChildTitle: { ar: 'إضافة طفل', en: 'Add a child' },
+  addChildCta: { ar: 'إضافة الطفل', en: 'Add child' },
+  tryDemoCta: { ar: 'أو جرّبي الديمو ببيانات تجريبية', en: 'Or try the demo with sample data' },
+  profilePrivacyHint: { ar: 'بيانات الطفل والصورة بتتحفظ محليًا على جهازك. تقدري تصدّريها أو تمسحيها بالكامل من مركز الخصوصية.', en: "The child's data and photo stay on this device. You can export or erase them from Privacy & data." },
+  bloodTypeDisclaimer: { ar: 'فصيلة الدم مكتوبة حسب إدخالك وغير متحقق منها. ما تعتمديش عليها في الطوارئ أو نقل الدم.', en: 'Blood type is user-reported and unverified. Do not rely on it for emergencies or transfusions.' },
 
   // Home
   trackingGrowthOf: { ar: 'متابعة نمو', en: "Tracking" },
   editProfileButton: { ar: 'تعديل', en: 'Edit' },
   currentAgeLabel: { ar: 'العمر الحالي:', en: 'Current age:' },
+  bloodTypeValue: { ar: 'فصيلة الدم: {type}', en: 'Blood type: {type}' },
   chatBanner: {
     ar: 'عندك سؤال عن مرحلة نمو معينة؟ اسألي المساعدة 💬',
     en: 'Have a question about a specific stage? Ask the assistant 💬',
@@ -43,6 +57,13 @@ const strings = {
   weeklyPlanCardHint: { ar: '٣ لحظات لعب مناسبة لعمره', en: '3 age-appropriate play moments' },
   reportCard: { ar: 'تقرير الطبيب', en: 'Doctor report' },
   reportCardHint: { ar: 'ملخص المهارات والملاحظات', en: 'Skills and observations summary' },
+  childrenCard: { ar: 'الأطفال', en: 'Children' },
+  childrenCardHint: { ar: 'إضافة طفل أو التبديل بينهم', en: 'Add or switch child profiles' },
+  timelineCard: { ar: 'سجل التطور', en: 'Development timeline' },
+  timelineCardHint: { ar: 'المهارات والملاحظات بالتاريخ', en: 'Dated milestones and notes' },
+  privacyCard: { ar: 'الخصوصية والبيانات', en: 'Privacy & data' },
+  privacyCardHint: { ar: 'تصدير أو استيراد أو حذف بياناتك', en: 'Export, import, or erase your data' },
+  demoBadge: { ar: 'بيانات تجريبية', en: 'Sample data' },
 
   // Stage detail
   stageDetailSubtitle: {
@@ -80,7 +101,10 @@ const strings = {
   chatSpeechQuestion: { ar: 'إزاي أساعده يتكلم؟', en: 'How can I help with speech?' },
   chatBabblingQuestion: { ar: 'إزاي أشجّع المناغاة والتواصل؟', en: 'How can I encourage babbling and communication?' },
   chatRemainingQuestion: { ar: 'إيه المهارات المتبقية في المرحلة دي؟', en: 'What are the remaining skills in this stage?' },
+  chatSpecialistQuestion: { ar: 'أكشف عند دكتور تخصص إيه؟', en: 'Which specialist should we see?' },
   chatThinking: { ar: 'جاري تجهيز الرد…', en: 'Preparing a reply…' },
+  clearChat: { ar: 'مسح المحادثة', en: 'Clear chat' },
+  clearChatConfirm: { ar: 'هل تريدين مسح سجل المحادثة لهذا الطفل؟', en: "Clear this child's chat history?" },
 
   // Weekly plan
   weeklyPlanTitle: { ar: 'خطة الأسبوع', en: 'Weekly plan' },
@@ -109,6 +133,26 @@ const strings = {
   // Navigation
   backButton: { ar: 'رجوع', en: 'Back' },
   stageDetailTitle: { ar: 'تفاصيل المرحلة', en: 'Stage details' },
+  childrenTitle: { ar: 'ملفات الأطفال', en: 'Child profiles' },
+  addAnotherChild: { ar: 'إضافة طفل جديد', en: 'Add another child' },
+  activeChild: { ar: 'الحالي', en: 'Active' },
+  switchChild: { ar: 'اختيار', en: 'Select' },
+  deleteChild: { ar: 'حذف الملف', en: 'Delete profile' },
+  deleteChildConfirm: { ar: 'سيتم حذف بيانات هذا الطفل نهائيًا من الجهاز.', en: "This child's local data will be permanently erased." },
+  timelineTitle: { ar: 'سجل التطور', en: 'Development timeline' },
+  timelineEmpty: { ar: 'لسه مفيش أحداث. حدّثي حالة مهارة أو أضيفي ملاحظة.', en: 'No events yet. Update a milestone or add an observation.' },
+  timelineObservation: { ar: 'ملاحظة عائلية', en: 'Family note' },
+  privacyTitle: { ar: 'الخصوصية والبيانات', en: 'Privacy & data' },
+  privacyIntro: { ar: 'بياناتك محفوظة محليًا في المتصفح أو التطبيق. لا يتم إنشاء حساب ولا رفع ملف الطفل تلقائيًا. عند استخدام المساعد المتصل فقط، يُرسل السؤال وسياق النمو اللازم لخدمة الـ API.', en: 'Your data is stored locally in this browser or app. No account is created and child profiles are not uploaded automatically. Only when the connected assistant is used, the question and necessary development context are sent to the API service.' },
+  exportData: { ar: 'تصدير نسخة احتياطية', en: 'Export backup' },
+  importData: { ar: 'استيراد نسخة احتياطية', en: 'Import backup' },
+  deleteAllData: { ar: 'حذف كل البيانات', en: 'Erase all data' },
+  deleteAllConfirm: { ar: 'سيتم حذف كل ملفات الأطفال والملاحظات والمحادثات من هذا الجهاز نهائيًا.', en: 'All child profiles, notes, and chats on this device will be permanently erased.' },
+  dataExported: { ar: 'تم تجهيز النسخة الاحتياطية.', en: 'Backup is ready.' },
+  dataImported: { ar: 'تم استيراد البيانات بنجاح.', en: 'Data imported successfully.' },
+  dataImportError: { ar: 'الملف غير صالح أو لا يحتوي على نسخة MUMAI مدعومة.', en: 'This file is invalid or is not a supported MUMAI backup.' },
+  cancelButton: { ar: 'إلغاء', en: 'Cancel' },
+  confirmButton: { ar: 'تأكيد', en: 'Confirm' },
 
   // AI chat templates
   chatDisclaimer: {

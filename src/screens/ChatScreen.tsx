@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
@@ -21,20 +22,8 @@ import { colors, spacing, radii } from '../theme/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  lang: 'ar' | 'en';
-  source?: 'local' | 'proxy';
-  connectionFailed?: boolean;
-}
-
-let msgCounter = 0;
-const nextId = () => String(msgCounter++);
-
 export default function ChatScreen({ route }: Props) {
-  const { profile, completedMilestoneIds, milestoneStatuses, recordQuestion } = useAppStore();
+  const { profile, completedMilestoneIds, milestoneStatuses, recordQuestion, chatMessages: messages, addChatMessage, clearChatMessages } = useAppStore();
   const { t, lang, isRTL } = useLanguage();
   const textAlign = isRTL ? 'right' : 'left';
   const rowDir = isRTL ? 'row-reverse' : 'row';
@@ -43,7 +32,6 @@ export default function ChatScreen({ route }: Props) {
   const stageId = route.params?.stageId ?? currentStageForAge(ageMonths).id;
   const babyName = profile?.name ?? t('defaultChildName');
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState(route.params?.askRemaining ? t('chatRemainingQuestion') : '');
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList>(null);
@@ -51,13 +39,18 @@ export default function ChatScreen({ route }: Props) {
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
+  function confirmClear() {
+    if (Platform.OS === 'web') { if (window.confirm(t('clearChatConfirm'))) clearChatMessages(); return; }
+    Alert.alert('', t('clearChatConfirm'), [{ text: t('cancelButton'), style: 'cancel' }, { text: t('confirmButton'), style: 'destructive', onPress: clearChatMessages }]);
+  }
+
   async function handleSend(suggestion?: string) {
     const text = (suggestion ?? input).trim();
     if (!text || sending.current) return;
     sending.current = true;
     recordQuestion(text);
     setInput('');
-    setMessages((m) => [...m, { id: nextId(), role: 'user', text, lang }]);
+    addChatMessage({ role: 'user', text, lang });
     setLoading(true);
     try {
       const reply = await getAssistantResponse(text, {
@@ -68,11 +61,11 @@ export default function ChatScreen({ route }: Props) {
         completedMilestoneIds,
         milestoneStatuses,
       }, messages);
-      if (mounted.current) setMessages((m) => [...m, { id: nextId(), role: 'assistant', lang, ...reply }]);
+      if (mounted.current) addChatMessage({ role: 'assistant', lang, ...reply });
     } catch {
       if (mounted.current) {
         setInput((draft) => draft || text);
-        setMessages((m) => [...m, { id: nextId(), role: 'assistant', lang, text: t('chatError') }]);
+        addChatMessage({ role: 'assistant', lang, text: t('chatError') });
       }
     } finally {
       sending.current = false;
@@ -86,6 +79,9 @@ export default function ChatScreen({ route }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
     >
+      <View style={styles.toolbar}>
+        {!!messages.length && <Pressable accessibilityRole="button" onPress={confirmClear}><Text style={styles.clearText}>{t('clearChat')}</Text></Pressable>}
+      </View>
       <FlatList
         ref={listRef}
         data={messages}
@@ -93,10 +89,10 @@ export default function ChatScreen({ route }: Props) {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={<View style={[styles.bubble, styles.bubbleAssistant, { maxWidth: '100%' }]}><Text style={[styles.bubbleTextAssistant, { textAlign }]}>{t('chatIntro', { name: babyName })}</Text></View>}
         ListFooterComponent={messages.length === 0 ? <View style={{ gap: spacing.sm }}>
-          {(['chatOverviewQuestion', ageMonths < 12 ? 'chatBabblingQuestion' : 'chatSpeechQuestion', 'chatRemainingQuestion'] as const).map((key) => <Pressable key={key} accessibilityRole="button" disabled={loading} onPress={() => handleSend(t(key))} style={{ padding: spacing.sm, backgroundColor: colors.chipBg, borderRadius: radii.sm }}><Text style={{ color: colors.primaryDark, textAlign }}>{t(key)}</Text></Pressable>)}
+          {(['chatOverviewQuestion', ageMonths < 12 ? 'chatBabblingQuestion' : 'chatSpeechQuestion', 'chatRemainingQuestion', 'chatSpecialistQuestion'] as const).map((key) => <Pressable key={key} accessibilityRole="button" disabled={loading} onPress={() => handleSend(t(key))} style={{ minHeight: 44, justifyContent: 'center', padding: spacing.sm, backgroundColor: colors.chipBg, borderRadius: radii.sm }}><Text style={{ color: colors.primaryDark, textAlign }}>{t(key)}</Text></Pressable>)}
         </View> : null}
         keyExtractor={(m) => m.id}
-        contentContainerStyle={{ padding: spacing.lg }}
+        contentContainerStyle={styles.messageContent}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         renderItem={({ item }) => (
           <View
@@ -119,7 +115,7 @@ export default function ChatScreen({ route }: Props) {
           <ActivityIndicator accessibilityLabel={t('chatThinking')} color={colors.primary} />
         </View>
       )}
-      <View style={[styles.inputRow, { flexDirection: rowDir }]}>
+      <View style={styles.inputWrap}><View style={[styles.inputRow, { flexDirection: rowDir }]}>
         <Pressable accessibilityRole="button" accessibilityState={{ disabled: loading || !input.trim() }} style={[styles.sendButton, (loading || !input.trim()) && { opacity: 0.5 }]} onPress={() => handleSend()} disabled={loading || !input.trim()}>
           <Text style={styles.sendButtonText}>{t('sendButton')}</Text>
         </Pressable>
@@ -135,13 +131,16 @@ export default function ChatScreen({ route }: Props) {
           onSubmitEditing={() => handleSend()}
           submitBehavior="submit"
         />
-      </View>
+      </View></View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  toolbar: { width: '100%', maxWidth: 900, alignSelf: 'center', alignItems: 'flex-end', paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+  clearText: { color: colors.urgent, fontWeight: '700', paddingVertical: spacing.sm },
+  messageContent: { width: '100%', maxWidth: 900, alignSelf: 'center', padding: spacing.lg },
   bubble: { maxWidth: '85%', borderRadius: radii.md, padding: spacing.md, marginBottom: spacing.sm },
   bubbleAssistant: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   bubbleUser: { backgroundColor: colors.primary },
@@ -149,12 +148,14 @@ const styles = StyleSheet.create({
   bubbleTextUser: { color: '#fff', fontSize: 14, lineHeight: 20 },
   loadingRow: { paddingBottom: spacing.sm },
   inputRow: {
+    width: '100%', maxWidth: 900, alignSelf: 'center',
     alignItems: 'flex-end',
     padding: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
   },
+  inputWrap: { backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
   input: {
     flex: 1,
     backgroundColor: colors.background,

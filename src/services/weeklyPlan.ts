@@ -63,7 +63,20 @@ export function buildWeeklyPlan(ageMonths: number, statuses: Record<string, Mile
     if (!chosen.includes(item)) chosen.push(item);
     if (chosen.length === 3) break;
   }
-  return chosen.map((item) => ({ id: `weekly-${item.id}`, milestoneId: item.id, domain: item.domain, ...domainCopy[item.domain] }));
+  return chosen.map((item) => {
+    const copy = domainCopy[item.domain];
+    const ageCue = ageMonths < 6
+      ? { ar: 'خلي النشاط على سطح ثابت وآمن مع دعم الرأس والجسم حسب احتياجه. ', en: 'Use a firm, safe surface and support the head and body as needed. ' }
+      : ageMonths < 12
+        ? { ar: 'خلي اللعبة قريبة وعلى مستوى نظره، واديه وقت يوصل أو يرد بطريقته. ', en: 'Keep the activity close and at eye level, allowing time to reach or respond. ' }
+        : ageMonths < 24
+          ? { ar: 'قدّمي اختيارين بسيطين وسمّي كل خطوة بكلمات قصيرة. ', en: 'Offer two simple choices and name each step with short words. ' }
+          : ageMonths < 36
+            ? { ar: 'خليها لعبة أدوار قصيرة وكرري التعليمات خطوة واحدة كل مرة. ', en: 'Make it a short turn-taking game, with one instruction at a time. ' }
+            : { ar: 'حوّليها لقصة أو لعب تمثيلي وسيبيه يقترح الخطوة الجاية. ', en: 'Turn it into a story or pretend-play moment and invite the next idea. ' };
+    return { id: `weekly-${item.id}`, milestoneId: item.id, domain: item.domain, moment: copy.moment, title: copy.title,
+      instruction: { ar: ageCue.ar + copy.instruction.ar, en: ageCue.en + copy.instruction.en } };
+  });
 }
 
 export function planFocusLabel(activity: WeeklyActivity, lang: 'ar' | 'en'): string {

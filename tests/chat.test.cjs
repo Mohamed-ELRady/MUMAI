@@ -96,6 +96,15 @@ test('regression and emergency symptoms bypass age filtering and remote generati
   assert.equal(reply.connectionFailed, undefined);
 });
 
+test('explicit specialist questions use the reviewed local referral route', async () => {
+  process.env.EXPO_PUBLIC_AI_PROXY_URL = 'https://example.com/chat';
+  global.fetch = () => { throw new Error('specialist routing must not depend on the proxy'); };
+  const reply = await getAssistantResponse('ابني مش بيتكلم، أكشف عند دكتور إيه؟', ctx);
+  assert.equal(reply.source, 'local');
+  assert.match(reply.text, /سمعيات أطفال|أنف وأذن/);
+  assert.match(reply.text, /أخصائي تخاطب/);
+});
+
 test('English replies and bilingual retrieval work regardless of input language', () => {
   const reply = ruleBasedReply('My baby is not walking', { ...ctx, lang: 'en' });
   assert.match(reply, /Walks independently/);
@@ -113,7 +122,55 @@ test('a configured proxy receives bounded history, age context and nonempty grou
     assert.ok(options.signal);
     return { ok: true, json: async () => ({ reply: '  رد مفيد  ' }) };
   };
-  assert.deepEqual(await getAssistantResponse('طيب أعمل إيه؟', ctx, [{ role: 'user', text: 'عمره سنتين مش بيتكلم' }]), { source: 'proxy', text: 'رد مفيد' });
+  const reply = await getAssistantResponse('طيب أعمل إيه؟', ctx, [{ role: 'user', text: 'عمره سنتين مش بيتكلم' }]);
+  assert.equal(reply.source, 'proxy');
+  assert.match(reply.text, /رد مفيد/);
+  assert.match(reply.text, /سمعيات أطفال|أنف وأذن/);
+  assert.match(reply.text, /أخصائي تخاطب/);
+});
+
+test('chat recommends the relevant assessment route without diagnosing', () => {
+  const speech = ruleBasedReply('ابني عنده 18 شهر ومش بيتكلم، أكشف عند دكتور إيه؟', ctx);
+  assert.match(speech, /مسار التقييم المقترح/);
+  assert.match(speech, /طبيب الأطفال/);
+  assert.match(speech, /سمعيات أطفال|أنف وأذن/);
+  assert.match(speech, /أخصائي تخاطب ولغة/);
+  assert.match(speech, /مش تشخيص/);
+
+  const motor = ruleBasedReply('ابني 18 شهر مش بيمشي، أروح لمين؟', ctx);
+  assert.match(motor, /علاج طبيعي أطفال/);
+  assert.match(motor, /أعصاب أطفال/);
+
+  const hearing = ruleBasedReply('مش بيستجيب لاسمه، تخصص إيه مناسب؟', ctx);
+  assert.match(hearing, /سمعيات أطفال|أنف وأذن/);
+
+  const vision = ruleBasedReply('مش بيتابع بعينيه، أكشف عند مين؟', { ...ctx, ageMonths: 6, currentStageId: 'm6' });
+  assert.match(vision, /طبيب عيون أطفال/);
+});
+
+test('specialist follow-ups retain the previous concern and use recorded problems', () => {
+  const followUp = ruleBasedReply('طيب أكشف عند مين؟', ctx, [{ role: 'user', text: 'ابني مش بيتكلم' }]);
+  assert.match(followUp, /سمعيات أطفال|أنف وأذن/);
+  assert.match(followUp, /أخصائي تخاطب/);
+
+  const languageMilestone = MILESTONES.find((item) => item.ageStageId === 'm18' && item.domain === 'language');
+  const motorMilestone = MILESTONES.find((item) => item.ageStageId === 'm18' && item.domain === 'gross_motor');
+  assert.ok(languageMilestone && motorMilestone);
+  const fromTracker = ruleBasedReply('بناء على المتابعة أكشف عند مين؟', {
+    ...ctx,
+    milestoneStatuses: { [languageMilestone.id]: 'not_observed', [motorMilestone.id]: 'not_observed' },
+  });
+  assert.match(fromTracker, /المهارات المسجلة «لسه ملاحظتهاش»/);
+  assert.match(fromTracker, new RegExp(languageMilestone.title.ar));
+  assert.match(fromTracker, /أخصائي تخاطب/);
+  assert.match(fromTracker, /علاج طبيعي أطفال/);
+  assert.match(fromTracker, /طب نمو وسلوك أطفال/);
+});
+
+test('a future skill alone does not trigger an unnecessary specialist referral', () => {
+  const earlySpeech = ruleBasedReply('طفلي 7 شهور مش بيقول كلمات، أكشف عند مين؟', { ...ctx, ageMonths: 7, currentStageId: 'm6' });
+  assert.match(earlySpeech, /الكلام بكلمات واضحة لسه مش متوقّع/);
+  assert.doesNotMatch(earlySpeech, /أخصائي تخاطب ولغة|سمعيات أطفال/);
 });
 
 for (const bad of [null, {}, { reply: '' }, { reply: '   ' }, { reply: 42 }, { reply: 'x'.repeat(20001) }]) {

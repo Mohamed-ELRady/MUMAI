@@ -85,7 +85,7 @@ export default function ReportScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.lg, paddingBottom: spacing.xl },
+  container: { flex: 1, backgroundColor: colors.background }, content: { width: '100%', maxWidth: 900, alignSelf: 'center', padding: spacing.lg, paddingBottom: spacing.xl },
   summaryCard: { backgroundColor: '#3A5F59', borderRadius: radii.lg, padding: spacing.lg, marginBottom: spacing.lg },
   title: { color: '#fff', fontSize: 20, fontWeight: '800' }, intro: { color: '#E8F3F0', fontSize: 13, lineHeight: 20, marginTop: spacing.sm },
   counts: { color: '#fff', fontWeight: '700', marginTop: spacing.md }, statusList: { backgroundColor: colors.surface, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },

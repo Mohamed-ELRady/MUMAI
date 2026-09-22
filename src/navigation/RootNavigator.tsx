@@ -12,6 +12,9 @@ import StageDetailScreen from '../screens/StageDetailScreen';
 import ChatScreen from '../screens/ChatScreen';
 import WeeklyPlanScreen from '../screens/WeeklyPlanScreen';
 import ReportScreen from '../screens/ReportScreen';
+import ChildrenScreen from '../screens/ChildrenScreen';
+import TimelineScreen from '../screens/TimelineScreen';
+import PrivacyScreen from '../screens/PrivacyScreen';
 import { colors } from '../theme/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,7 +39,10 @@ export default function RootNavigator() {
         <Text accessibilityRole="alert" style={{ color: colors.text, textAlign: isRTL ? 'right' : 'left' }}>{t(storageError === 'load' ? 'storageLoadError' : 'storageSaveError')}</Text>
         <Pressable accessibilityRole="button" onPress={retryStorage}><Text style={{ color: colors.primaryDark, paddingTop: 8 }}>{t('retryButton')}</Text></Pressable>
       </View>}
-    <NavigationContainer>
+    <NavigationContainer linking={{
+      prefixes: ['https://mohamed-elrady.github.io', 'http://localhost:8081'],
+      config: { screens: { Home: 'MUMAI', Onboarding: 'MUMAI/profile', StageDetail: 'MUMAI/stage/:stageId', Chat: 'MUMAI/chat', WeeklyPlan: 'MUMAI/plan', Report: 'MUMAI/report', Children: 'MUMAI/children', Timeline: 'MUMAI/timeline', Privacy: 'MUMAI/privacy' } },
+    }}>
       <Stack.Navigator
         initialRouteName={profile ? 'Home' : 'Onboarding'}
         screenOptions={{
@@ -51,7 +57,7 @@ export default function RootNavigator() {
           component={OnboardingScreen}
           options={({ route }) => ({
             headerShown: true,
-            title: t(route.params?.isEditing ? 'editProfileTitle' : 'appName'),
+            title: t(route.params?.isEditing ? 'editProfileTitle' : route.params?.isAdding ? 'addChildTitle' : 'appName'),
           })}
         />
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: t('appName') }} />
@@ -59,6 +65,9 @@ export default function RootNavigator() {
         <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('chatTitle') }} />
         <Stack.Screen name="WeeklyPlan" component={WeeklyPlanScreen} options={{ title: t('weeklyPlanTitle') }} />
         <Stack.Screen name="Report" component={ReportScreen} options={{ title: t('reportTitle') }} />
+        <Stack.Screen name="Children" component={ChildrenScreen} options={{ title: t('childrenTitle') }} />
+        <Stack.Screen name="Timeline" component={TimelineScreen} options={{ title: t('timelineTitle') }} />
+        <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ title: t('privacyTitle') }} />
       </Stack.Navigator>
     </NavigationContainer>
     </SafeAreaView>

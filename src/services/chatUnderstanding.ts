@@ -54,7 +54,7 @@ export function isConcern(query: string): boolean {
 
 export function isFollowUp(query: string): boolean {
   const text = normalizeArabic(query);
-  return /^(طيب\s*)?(اعمل ايه|واعمل ايه|ازاي اساعده|ازاي اساعدها|اساعده ازاي|اساعدها ازاي|ليه|وضح اكتر|ده طبيعي|دا طبيعي|هل ده طبيعي|وايه الحل|what should i do|what can i do|how can i help|is that normal|why|tell me more)(\s|$)/.test(text)
+  return /^(طيب\s*)?(اعمل ايه|واعمل ايه|ازاي اساعده|ازاي اساعدها|اساعده ازاي|اساعدها ازاي|ليه|وضح اكتر|ده طبيعي|دا طبيعي|هل ده طبيعي|وايه الحل|اكشف عند مين|اروح لدكتور ايه|نروح لدكتور ايه|انهي تخصص|تخصص ايه|مين الدكتور المناسب|what should i do|what can i do|how can i help|is that normal|why|tell me more|which doctor|what specialist|who should we see)(\s|$)/.test(text)
     || (ageInQuery(query) !== undefined && conceptsIn(query).length === 0);
 }
 

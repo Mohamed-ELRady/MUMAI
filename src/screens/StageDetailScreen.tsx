@@ -40,7 +40,7 @@ export default function StageDetailScreen({ route, navigation }: Props) {
   if (!stage) return <View style={{ padding: spacing.lg }}><Text style={{ textAlign }}>{t('invalidStage')}</Text></View>;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg }}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={[styles.title, { textAlign }]}>{pick(stage.label)}</Text>
       <Text style={[styles.subtitle, { textAlign }]}>{t('stageDetailSubtitle')}</Text>
 
@@ -58,7 +58,7 @@ export default function StageDetailScreen({ route, navigation }: Props) {
                   <View accessibilityRole="radiogroup" style={[styles.statusRow, { flexDirection: rowDir }]}>
                     {choices.map((choice) => {
                       const active = selected === choice.status;
-                      return <Pressable key={choice.status} accessibilityRole="radio" accessibilityState={{ selected: active }} accessibilityLabel={`${pick(m.title)}: ${t(choice.label)}`}
+                      return <Pressable key={choice.status} accessibilityRole="radio" accessibilityState={{ checked: active }} accessibilityLabel={`${pick(m.title)}: ${t(choice.label)}`}
                         onPress={() => setMilestoneStatus(m.id, choice.status)} style={[styles.statusChip, active && styles[`status_${choice.status}`]]}>
                         <Text style={[styles.statusChipText, active && styles.statusChipTextActive]}>{t(choice.label)}</Text>
                       </Pressable>;
@@ -72,14 +72,14 @@ export default function StageDetailScreen({ route, navigation }: Props) {
       })}
 
       {unmetCount > 0 && (
-        <Pressable style={styles.askButton} onPress={() => navigation.navigate('Chat', { stageId, askRemaining: true })}>
+        <Pressable accessibilityRole="button" style={styles.askButton} onPress={() => navigation.navigate('Chat', { stageId, askRemaining: true })}>
           <Text style={styles.askButtonText}>{t('askAboutRemaining', { n: unmetCount })}</Text>
         </Pressable>
       )}
 
       {redFlags.length > 0 && (
         <View style={styles.redFlagsSection}>
-          <Pressable onPress={() => setShowRedFlags((v) => !v)}>
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: showRedFlags }} onPress={() => setShowRedFlags((v) => !v)}>
             <Text style={[styles.redFlagsToggle, { textAlign }]}>
               {t(showRedFlags ? 'hideRedFlags' : 'showRedFlags', { n: redFlags.length })}
             </Text>
@@ -113,6 +113,7 @@ export default function StageDetailScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  content: { width: '100%', maxWidth: 900, alignSelf: 'center', padding: spacing.lg },
   title: { fontSize: 22, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 14, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.lg },
   domainSection: { marginBottom: spacing.lg },
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   },
   milestoneText: { fontSize: 14, color: colors.text, fontWeight: '600', marginBottom: spacing.sm },
   statusRow: { gap: spacing.xs },
-  statusChip: { flex: 1, minHeight: 42, borderWidth: 1, borderColor: colors.border, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, paddingVertical: spacing.xs },
+  statusChip: { flex: 1, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, paddingVertical: spacing.xs },
   status_achieved: { backgroundColor: colors.success, borderColor: colors.success },
   status_emerging: { backgroundColor: colors.warning, borderColor: colors.warning },
   status_not_observed: { backgroundColor: colors.urgent, borderColor: colors.urgent },

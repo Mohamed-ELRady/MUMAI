@@ -37,12 +37,13 @@ test('stages unlock on the reference birthday, never a month early', () => {
 test('restoration rejects corrupt profiles and removes unknown or duplicate checkmarks', () => {
   const profile = { name: '  يوسف  ', birthDateISO: '2024-01-02' };
   const restored = restoreState(JSON.stringify({ profile, completedMilestoneIds: ['ms-m1-1', 'ms-m1-1', 42, null, 'unknown', 'ms-m9-3'] }));
-  assert.equal(restored.profile.name, 'يوسف');
-  assert.deepEqual(restored.milestoneStatuses, { 'ms-m1-1': 'achieved' });
-  assert.deepEqual(restored.weeklyActivityChecks, {});
-  assert.deepEqual(restored.observations, []);
-  assert.deepEqual(restored.savedQuestions, []);
-  assert.deepEqual(restoreState(null), { profile: null, milestoneStatuses: {}, weeklyActivityChecks: {}, observations: [], savedQuestions: [] });
+  const child = restored.children[0];
+  assert.equal(child.profile.name, 'يوسف');
+  assert.deepEqual(child.milestoneStatuses, { 'ms-m1-1': 'achieved' });
+  assert.deepEqual(child.weeklyActivityChecks, {});
+  assert.deepEqual(child.observations, []);
+  assert.deepEqual(child.savedQuestions, []);
+  assert.deepEqual(restoreState(null), { activeChildId: null, children: [] });
   for (const raw of ['{broken', 'null', '[]', '{"profile":42}', '{"profile":{"name":"x","birthDateISO":"tomorrow"}}']) assert.throws(() => restoreState(raw));
   assert.equal(validateProfile({ name: ' ', birthDateISO: '2024-01-02' }), null);
 });
@@ -50,7 +51,28 @@ test('restoration rejects corrupt profiles and removes unknown or duplicate chec
 test('legacy timestamp profiles migrate to a calendar birthday', () => {
   const date = new Date(2024, 0, 2, 12);
   const restored = restoreState(JSON.stringify({ profile: { name: 'Y', birthDateISO: date.toISOString() }, completedMilestoneIds: [] }));
-  assert.equal(restored.profile.birthDateISO, '2024-01-02');
+  assert.equal(restored.children[0].profile.birthDateISO, '2024-01-02');
+});
+
+test('optional child photo and blood type are preserved without becoming required', () => {
+  assert.deepEqual(validateProfile({ name: 'Y', birthDateISO: '2024-01-02' }), { name: 'Y', birthDateISO: '2024-01-02' });
+  assert.deepEqual(validateProfile({
+    name: 'Y',
+    birthDateISO: '2024-01-02',
+    photoUri: 'file:///profile/child.jpg',
+    bloodType: 'AB-',
+  }), {
+    name: 'Y',
+    birthDateISO: '2024-01-02',
+    photoUri: 'file:///profile/child.jpg',
+    bloodType: 'AB-',
+  });
+  assert.deepEqual(validateProfile({
+    name: 'Y',
+    birthDateISO: '2024-01-02',
+    photoUri: 'https://example.com/tracker.png',
+    bloodType: 'X',
+  }), { name: 'Y', birthDateISO: '2024-01-02' });
 });
 
 test('restoration validates status, weekly activity and observation records', () => {
@@ -65,10 +87,25 @@ test('restoration validates status, weekly activity and observation records', ()
     savedQuestions: [{ id: 'q1', text: '  إمتى يبدأ الكلام؟ ', createdAt: '2026-09-09T11:00:00.000Z' }, { id: 'bad', text: '', createdAt: 'bad' }],
   });
   const restored = restoreState(raw);
-  assert.deepEqual(restored.milestoneStatuses, { 'ms-m1-1': 'emerging' });
-  assert.deepEqual(restored.weeklyActivityChecks, { '2026-09-07': ['weekly-a'] });
-  assert.deepEqual(restored.observations, [{ id: 'n1', text: 'بدأ يبتسم', createdAt: '2026-09-09T10:00:00.000Z', milestoneId: 'ms-m1-1' }]);
-  assert.deepEqual(restored.savedQuestions, [{ id: 'q1', text: 'إمتى يبدأ الكلام؟', createdAt: '2026-09-09T11:00:00.000Z' }]);
+  const child = restored.children[0];
+  assert.deepEqual(child.milestoneStatuses, { 'ms-m1-1': 'emerging' });
+  assert.deepEqual(child.weeklyActivityChecks, { '2026-09-07': ['weekly-a'] });
+  assert.deepEqual(child.observations, [{ id: 'n1', text: 'بدأ يبتسم', createdAt: '2026-09-09T10:00:00.000Z', milestoneId: 'ms-m1-1' }]);
+  assert.deepEqual(child.savedQuestions, [{ id: 'q1', text: 'إمتى يبدأ الكلام؟', createdAt: '2026-09-09T11:00:00.000Z' }]);
+});
+
+test('multi-child backups preserve the active child and validated chat history', () => {
+  const raw = JSON.stringify({ activeChildId: 'b', children: [
+    { id: 'a', profile: { name: 'A', birthDateISO: '2024-01-02' } },
+    { id: 'b', profile: { name: 'B', birthDateISO: '2023-02-03' }, chatMessages: [
+      { id: 'm1', role: 'user', text: ' hello ', lang: 'en', createdAt: '2026-09-09T11:00:00.000Z' },
+      { id: 'bad', role: 'system', text: 'hidden', lang: 'en', createdAt: 'bad' },
+    ] },
+  ] });
+  const restored = restoreState(raw);
+  assert.equal(restored.activeChildId, 'b');
+  assert.equal(restored.children.length, 2);
+  assert.deepEqual(restored.children[1].chatMessages, [{ id: 'm1', role: 'user', text: 'hello', lang: 'en', createdAt: '2026-09-09T11:00:00.000Z' }]);
 });
 
 test('serialized writes preserve the newest state even if a previous write fails', async () => {

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import strings, { Lang, StringKey } from './strings';
 import { Localized } from '../data/milestones';
@@ -30,6 +31,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }).catch(() => {}).finally(() => { if (active) setIsLoading(false); });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+  }, [lang]);
 
   function setLang(next: Lang) {
     setLangState(next);

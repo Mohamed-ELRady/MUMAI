@@ -43,7 +43,7 @@ export default function WeeklyPlanScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.lg, paddingBottom: spacing.xl },
+  container: { flex: 1, backgroundColor: colors.background }, content: { width: '100%', maxWidth: 900, alignSelf: 'center', padding: spacing.lg, paddingBottom: spacing.xl },
   introCard: { backgroundColor: '#EAF5F2', borderRadius: radii.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: '#CBE4DE' },
   eyebrow: { color: '#39796C', fontSize: 12, fontWeight: '800', marginBottom: spacing.sm }, intro: { color: colors.text, fontSize: 15, lineHeight: 23 },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.md, marginBottom: spacing.md },
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   number: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.chipBg, alignItems: 'center', justifyContent: 'center', marginHorizontal: spacing.sm },
   numberDone: { backgroundColor: colors.secondary }, numberText: { color: colors.text, fontWeight: '800' }, moment: { color: colors.primaryDark, fontSize: 12, fontWeight: '700' },
   title: { color: colors.text, fontSize: 18, fontWeight: '800', marginTop: 2 }, instruction: { color: colors.text, lineHeight: 22, fontSize: 14 },
-  focus: { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm }, doneButton: { borderWidth: 1, borderColor: colors.secondary, borderRadius: radii.pill, paddingVertical: 9, alignItems: 'center', marginTop: spacing.md },
-  doneButtonActive: { backgroundColor: colors.secondary }, doneButtonText: { color: '#39796C', fontWeight: '700' }, doneButtonTextActive: { color: '#fff' },
+  focus: { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm }, doneButton: { minHeight: 44, borderWidth: 1, borderColor: colors.secondary, borderRadius: radii.pill, paddingVertical: 9, alignItems: 'center', justifyContent: 'center', marginTop: spacing.md },
+  doneButtonActive: { backgroundColor: colors.secondary }, doneButtonText: { color: colors.secondary, fontWeight: '700' }, doneButtonTextActive: { color: '#fff' },
   safety: { color: colors.textMuted, fontSize: 12, lineHeight: 19, padding: spacing.sm },
 });
