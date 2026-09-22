@@ -1,0 +1,19 @@
+{
+  "name": "MUMAI — Child Development Tracker",
+  "short_name": "MUMAI",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/MUMAI/",
+  "scope": "/MUMAI/",
+  "display": "standalone",
+  "background_color": "#FFF8F3",
+  "theme_color": "#A84F45",
+  "icons": [
+    {
+      "src": "/MUMAI/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
