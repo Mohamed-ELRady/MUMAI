@@ -13,72 +13,143 @@ import { parseCalendarDate, toDateInputValue, validBirthDate } from '../data/age
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
-function WebDateInput({ value, onChange, isRTL, label }: { value: Date; onChange: (date: Date) => void; isRTL: boolean; label: string }) {
-  return React.createElement('input', {
-    type: 'date',
-    'aria-label': label,
-    value: toDateInputValue(value),
-    max: toDateInputValue(new Date()),
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-      onChange(parseCalendarDate(e.target.value) ?? new Date(NaN));
-    },
-    style: {
-      backgroundColor: colors.surface,
-      borderRadius: radii.md,
-      border: `1px solid ${colors.border}`,
-      padding: spacing.md,
-      fontSize: 16,
-      color: colors.text,
-      textAlign: isRTL ? 'right' : 'left',
-      width: '100%',
-      boxSizing: 'border-box',
-      fontFamily: 'inherit',
-    },
-  });
+type DatePart = 'day' | 'month' | 'year';
+
+function WebBirthDateFields({
+  value,
+  onChange,
+  isRTL,
+  locale,
+  labels,
+}: {
+  value: Date | null;
+  onChange: (date: Date | null) => void;
+  isRTL: boolean;
+  locale: string;
+  labels: { day: string; month: string; year: string; group: string };
+}) {
+  const today = new Date();
+  const [parts, setParts] = useState(() => ({
+    day: value ? String(value.getDate()) : '',
+    month: value ? String(value.getMonth() + 1) : '',
+    year: value ? String(value.getFullYear()) : '',
+  }));
+  const selectedYear = Number(parts.year) || today.getFullYear();
+  const selectedMonth = Number(parts.month) || 1;
+  const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+  const years = Array.from({ length: 11 }, (_, index) => today.getFullYear() - index);
+  const months = Array.from({ length: 12 }, (_, index) => ({
+    value: index + 1,
+    label: new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2024, index, 1)),
+  }));
+
+  function updatePart(part: DatePart, rawValue: string) {
+    const next = { ...parts, [part]: rawValue };
+    if ((part === 'month' || part === 'year') && next.day && next.month && next.year) {
+      const maximumDay = new Date(Number(next.year), Number(next.month), 0).getDate();
+      if (Number(next.day) > maximumDay) next.day = String(maximumDay);
+    }
+    setParts(next);
+    if (!next.day || !next.month || !next.year) {
+      onChange(null);
+      return;
+    }
+    const iso = `${next.year}-${next.month.padStart(2, '0')}-${next.day.padStart(2, '0')}`;
+    const date = parseCalendarDate(iso);
+    onChange(date && iso <= toDateInputValue(today) ? date : null);
+  }
+
+  const selectStyle: React.CSSProperties = {
+    appearance: 'auto',
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    border: `1px solid ${colors.border}`,
+    padding: '12px 10px',
+    minHeight: 48,
+    fontSize: 15,
+    color: colors.text,
+    width: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+    direction: isRTL ? 'rtl' : 'ltr',
+  };
+
+  function selectField(part: DatePart, fieldLabel: string, options: { value: string; label: string }[], flex: number) {
+    return (
+      <View style={[styles.datePart, { flex }]} key={part}>
+        <Text style={[styles.datePartLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{fieldLabel}</Text>
+        {React.createElement('select', {
+          'aria-label': fieldLabel,
+          value: parts[part],
+          onChange: (event: React.ChangeEvent<HTMLSelectElement>) => updatePart(part, event.target.value),
+          style: selectStyle,
+        }, [
+          React.createElement('option', { key: 'placeholder', value: '', disabled: true }, fieldLabel),
+          ...options.map((option) => React.createElement('option', { key: option.value, value: option.value }, option.label)),
+        ])}
+      </View>
+    );
+  }
+
+  return (
+    <View accessibilityLabel={labels.group} style={[styles.dateFields, { flexDirection: 'row', direction: isRTL ? 'rtl' : 'ltr' }]}>
+      {selectField('day', labels.day, Array.from({ length: daysInMonth }, (_, index) => ({ value: String(index + 1), label: String(index + 1) })), 0.8)}
+      {selectField('month', labels.month, months.map((month) => ({ value: String(month.value), label: month.label })), 1.35)}
+      {selectField('year', labels.year, years.map((year) => ({ value: String(year), label: String(year) })), 1)}
+    </View>
+  );
 }
 
 function NativeDatePicker({
   value,
   onChange,
   locale,
+  placeholder,
+  doneLabel,
 }: {
-  value: Date;
-  onChange: (date: Date) => void;
+  value: Date | null;
+  onChange: (date: Date | null) => void;
   locale: string;
+  placeholder: string;
+  doneLabel: string;
 }) {
   // يُحمَّل ديناميكيًا لأنه مكتبة أصلية غير متاحة على الويب
   const DateTimePicker = require('@react-native-community/datetimepicker').default;
-  const [showPicker, setShowPicker] = useState(Platform.OS === 'ios');
-
-  if (Platform.OS === 'ios') {
-    return (
-      <DateTimePicker
-        value={value}
-        mode="date"
-        maximumDate={new Date()}
-        display="spinner"
-        locale={locale}
-        onChange={(_: unknown, date?: Date) => date && onChange(date)}
-      />
-    );
-  }
+  const [showPicker, setShowPicker] = useState(false);
+  const [draftDate, setDraftDate] = useState(() => {
+    const fallback = new Date();
+    fallback.setMonth(fallback.getMonth() - 6);
+    return value ?? fallback;
+  });
 
   return (
     <>
-      <Pressable style={styles.dateButton} onPress={() => setShowPicker(true)}>
-        <Text style={styles.dateButtonText}>{value.toLocaleDateString(locale)}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={placeholder} style={styles.dateButton} onPress={() => setShowPicker(true)}>
+        <Text style={[styles.dateButtonText, !value && styles.dateButtonPlaceholder]}>{value ? value.toLocaleDateString(locale) : placeholder}</Text>
       </Pressable>
       {showPicker && (
-        <DateTimePicker
-          value={value}
-          mode="date"
-          maximumDate={new Date()}
-          display="default"
-          onChange={(_: unknown, date?: Date) => {
-            setShowPicker(false);
-            if (date) onChange(date);
-          }}
-        />
+        <>
+          <DateTimePicker
+            value={value ?? draftDate}
+            mode="date"
+            maximumDate={new Date()}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            locale={locale}
+            onChange={(_: unknown, date?: Date) => {
+              if (Platform.OS !== 'ios') setShowPicker(false);
+              if (date) {
+                setDraftDate(date);
+                onChange(date);
+              }
+            }}
+          />
+          {Platform.OS === 'ios' && (
+            <Pressable accessibilityRole="button" style={styles.dateDoneButton} onPress={() => setShowPicker(false)}>
+              <Text style={styles.dateDoneText}>{doneLabel}</Text>
+            </Pressable>
+          )}
+        </>
       )}
     </>
   );
@@ -93,11 +164,16 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   const [photoUri, setPhotoUri] = useState(isEditing ? profile?.photoUri : undefined);
   const [bloodType, setBloodType] = useState<BloodType | undefined>(isEditing ? profile?.bloodType : undefined);
   const [photoError, setPhotoError] = useState(false);
-  const [birthDate, setBirthDate] = useState<Date>(
-    isEditing && profile ? parseCalendarDate(profile.birthDateISO) ?? new Date(profile.birthDateISO) : new Date()
+  const [birthDate, setBirthDate] = useState<Date | null>(
+    isEditing && profile ? parseCalendarDate(profile.birthDateISO) ?? new Date(profile.birthDateISO) : null
   );
   const [showDateError, setShowDateError] = useState(false);
   const textAlign = isRTL ? 'right' : 'left';
+
+  function handleBirthDateChange(date: Date | null) {
+    setBirthDate(date);
+    if (date) setShowDateError(false);
+  }
 
   async function pickPhoto() {
     setPhotoError(false);
@@ -132,7 +208,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   }
 
   function handleContinue() {
-    const birthDateISO = validBirthDate(toDateInputValue(birthDate));
+    const birthDateISO = birthDate ? validBirthDate(toDateInputValue(birthDate)) : null;
     if (!birthDateISO) { setShowDateError(true); return; }
     const nextProfile = {
       name: name.trim() || t('defaultChildName'),
@@ -196,10 +272,23 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       />
 
       <Text style={[styles.label, { textAlign }]}>{t('birthDateLabel')}</Text>
+      <Text style={[styles.dateHint, { textAlign }]}>{t('birthDateHint')}</Text>
       {Platform.OS === 'web' ? (
-        <WebDateInput value={birthDate} onChange={setBirthDate} isRTL={isRTL} label={t('birthDateLabel')} />
+        <WebBirthDateFields
+          value={birthDate}
+          onChange={handleBirthDateChange}
+          isRTL={isRTL}
+          locale={isRTL ? 'ar-EG' : 'en-US'}
+          labels={{ day: t('birthDayLabel'), month: t('birthMonthLabel'), year: t('birthYearLabel'), group: t('birthDateLabel') }}
+        />
       ) : (
-        <NativeDatePicker value={birthDate} onChange={setBirthDate} locale={isRTL ? 'ar-EG' : 'en-US'} />
+        <NativeDatePicker
+          value={birthDate}
+          onChange={handleBirthDateChange}
+          locale={isRTL ? 'ar-EG' : 'en-US'}
+          placeholder={t('chooseBirthDate')}
+          doneLabel={t('datePickerDone')}
+        />
       )}
       {showDateError && <Text accessibilityRole="alert" style={{ color: colors.urgent, marginTop: spacing.sm, textAlign }}>{t('invalidBirthDate')}</Text>}
 
@@ -268,8 +357,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
+    minHeight: 50,
+    justifyContent: 'center',
   },
   dateButtonText: { fontSize: 16, color: colors.text },
+  dateButtonPlaceholder: { color: colors.textMuted },
+  dateHint: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginBottom: spacing.sm },
+  dateFields: { width: '100%', gap: spacing.sm, alignItems: 'flex-end' },
+  datePart: { minWidth: 0 },
+  datePartLabel: { color: colors.textMuted, fontSize: 12, marginBottom: spacing.xs },
+  dateDoneButton: { minHeight: 44, backgroundColor: colors.chipBg, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs },
+  dateDoneText: { color: colors.primaryDark, fontWeight: '800' },
   bloodTypeGrid: { flexWrap: 'wrap', gap: spacing.sm },
   bloodTypeChip: { minWidth: 58, alignItems: 'center', backgroundColor: colors.surface, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: 10 },
   bloodTypeChipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
