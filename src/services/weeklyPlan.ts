@@ -1,6 +1,7 @@
 import { currentStageForAge } from '../data/ageHelpers';
 import { DOMAIN_LABELS, Domain, Localized, MILESTONES, Milestone } from '../data/milestones';
 import { MilestoneStatus } from '../store/persistedState';
+import { ChildGender, genderizeChildText } from '../domain/child';
 
 export interface WeeklyActivity {
   id: string;
@@ -50,7 +51,7 @@ function priority(item: Milestone, statuses: Record<string, MilestoneStatus>): n
   return statuses[item.id] === 'emerging' ? 0 : statuses[item.id] === 'not_observed' ? 1 : statuses[item.id] === undefined ? 2 : 3;
 }
 
-export function buildWeeklyPlan(ageMonths: number, statuses: Record<string, MilestoneStatus>): WeeklyActivity[] {
+export function buildWeeklyPlan(ageMonths: number, statuses: Record<string, MilestoneStatus>, gender?: ChildGender): WeeklyActivity[] {
   const stage = currentStageForAge(ageMonths);
   const stageItems = MILESTONES.filter((item) => item.ageStageId === stage.id)
     .sort((a, b) => priority(a, statuses) - priority(b, statuses));
@@ -74,12 +75,14 @@ export function buildWeeklyPlan(ageMonths: number, statuses: Record<string, Mile
           : ageMonths < 36
             ? { ar: 'خليها لعبة أدوار قصيرة وكرري التعليمات خطوة واحدة كل مرة. ', en: 'Make it a short turn-taking game, with one instruction at a time. ' }
             : { ar: 'حوّليها لقصة أو لعب تمثيلي وسيبيه يقترح الخطوة الجاية. ', en: 'Turn it into a story or pretend-play moment and invite the next idea. ' };
-    return { id: `weekly-${item.id}`, milestoneId: item.id, domain: item.domain, moment: copy.moment, title: copy.title,
-      instruction: { ar: ageCue.ar + copy.instruction.ar, en: ageCue.en + copy.instruction.en } };
+    return { id: `weekly-${item.id}`, milestoneId: item.id, domain: item.domain,
+      moment: { ar: genderizeChildText(copy.moment.ar, gender, 'ar'), en: genderizeChildText(copy.moment.en, gender, 'en') },
+      title: { ar: genderizeChildText(copy.title.ar, gender, 'ar'), en: genderizeChildText(copy.title.en, gender, 'en') },
+      instruction: { ar: genderizeChildText(ageCue.ar + copy.instruction.ar, gender, 'ar'), en: genderizeChildText(ageCue.en + copy.instruction.en, gender, 'en') } };
   });
 }
 
-export function planFocusLabel(activity: WeeklyActivity, lang: 'ar' | 'en'): string {
+export function planFocusLabel(activity: WeeklyActivity, lang: 'ar' | 'en', gender?: ChildGender): string {
   const milestone = MILESTONES.find((item) => item.id === activity.milestoneId);
-  return milestone ? milestone.title[lang] : DOMAIN_LABELS[activity.domain][lang];
+  return genderizeChildText(milestone ? milestone.title[lang] : DOMAIN_LABELS[activity.domain][lang], gender, lang);
 }

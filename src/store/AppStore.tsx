@@ -96,14 +96,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       if (storageError === 'load' && revision === 0) { setIsLoading(true); setLoadAttempt((attempt) => attempt + 1); } else markChanged();
     },
     createChild: (profile) => {
-      const valid = validateProfile(profile);
+      const valid = validateProfile(profile, true);
       if (!valid || isLoading) return;
       const child = createEmptyChild(valid);
       setState((previous) => ({ children: [...previous.children, child].slice(-10), activeChildId: child.id }));
       markChanged();
     },
     setProfile: (profile) => {
-      const valid = validateProfile(profile);
+      const valid = validateProfile(profile, true);
       if (!valid || isLoading) return;
       if (!activeChild) {
         const child = createEmptyChild(valid);
@@ -138,7 +138,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     loadDemoData: () => {
       const birthday = new Date(); birthday.setHours(12, 0, 0, 0); birthday.setMonth(birthday.getMonth() - 7);
       const now = new Date().toISOString();
-      const child = createEmptyChild({ name: 'نور', birthDateISO: birthday.toISOString().slice(0, 10), isDemo: true }, 'demo-child');
+      const child = createEmptyChild({ name: 'نور', birthDateISO: birthday.toISOString().slice(0, 10), gender: 'female', isDemo: true }, 'demo-child');
       const sample = MILESTONES.filter((item) => item.ageStageId === 'm6').slice(0, 5);
       sample.forEach((item, index) => { child.milestoneStatuses[item.id] = index < 3 ? 'achieved' : index === 3 ? 'emerging' : 'not_observed'; child.milestoneUpdatedAt[item.id] = now; });
       child.observations = [{ id: 'demo-note', text: 'بدأت تلتفت للصوت وتضحك أثناء اللعب.', createdAt: now }];

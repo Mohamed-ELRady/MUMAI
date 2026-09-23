@@ -9,6 +9,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { generateReportHtml, statusCounts } from '../services/reportService';
 import { useAppStore } from '../store/AppStore';
 import { colors, radii, spacing } from '../theme/theme';
+import { genderizeChildText } from '../domain/child';
 
 export default function ReportScreen() {
   const { profile, milestoneStatuses, observations, savedQuestions, addObservation, removeObservation } = useAppStore();
@@ -21,6 +22,7 @@ export default function ReportScreen() {
   const counts = statusCounts(milestoneStatuses, stage.id);
   const currentMilestones = useMemo(() => MILESTONES.filter((item) => item.ageStageId === stage.id), [stage.id]);
   const textAlign = isRTL ? 'right' : 'left';
+  const childText = (text: string) => genderizeChildText(text, profile?.gender, lang);
 
   function saveNote() {
     if (!note.trim()) return;
@@ -47,22 +49,22 @@ export default function ReportScreen() {
     <View style={styles.summaryCard}>
       <Text style={[styles.title, { textAlign }]}>{profile.name} · {pick(stage.label)}</Text>
       <Text style={[styles.intro, { textAlign }]}>{t('reportIntro')}</Text>
-      <Text style={[styles.counts, { textAlign }]}>{t('reportCounts', { done: counts.achieved, emerging: counts.emerging, notObserved: counts.notObserved })}</Text>
+      <Text style={[styles.counts, { textAlign }]}>{childText(t('reportCounts', { done: counts.achieved, emerging: counts.emerging, notObserved: counts.notObserved }))}</Text>
     </View>
 
     <View style={styles.statusList}>
       {currentMilestones.map((item) => {
         const status = milestoneStatuses[item.id];
-        const label = status === 'achieved' ? t('statusAchieved') : status === 'emerging' ? t('statusEmerging') : status === 'not_observed' ? t('statusNotObserved') : '—';
+        const label = childText(status === 'achieved' ? t('statusAchieved') : status === 'emerging' ? t('statusEmerging') : status === 'not_observed' ? t('statusNotObserved') : '—');
         return <View key={item.id} style={[styles.statusRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <View style={{ flex: 1 }}><Text style={[styles.skill, { textAlign }]}>{pick(item.title)}</Text><Text style={[styles.domain, { textAlign }]}>{pick(DOMAIN_LABELS[item.domain])}</Text></View>
+          <View style={{ flex: 1 }}><Text style={[styles.skill, { textAlign }]}>{childText(pick(item.title))}</Text><Text style={[styles.domain, { textAlign }]}>{pick(DOMAIN_LABELS[item.domain])}</Text></View>
           <Text style={[styles.statusLabel, status === 'achieved' ? styles.achieved : status === 'emerging' ? styles.emerging : status === 'not_observed' ? styles.notObserved : styles.unrecorded]}>{label}</Text>
         </View>;
       })}
     </View>
 
     <Text style={[styles.sectionTitle, { textAlign }]}>{t('reportObservations')}</Text>
-    <TextInput accessibilityLabel={t('reportObservationPlaceholder')} value={note} onChangeText={setNote} placeholder={t('reportObservationPlaceholder')} placeholderTextColor={colors.textMuted} multiline maxLength={1000} style={[styles.noteInput, { textAlign }]} />
+    <TextInput accessibilityLabel={childText(t('reportObservationPlaceholder'))} value={note} onChangeText={setNote} placeholder={childText(t('reportObservationPlaceholder'))} placeholderTextColor={colors.textMuted} multiline maxLength={1000} style={[styles.noteInput, { textAlign }]} />
     <Pressable accessibilityRole="button" accessibilityState={{ disabled: !note.trim() }} disabled={!note.trim()} onPress={saveNote} style={[styles.addButton, !note.trim() && styles.disabled]}><Text style={styles.addButtonText}>{t('reportAddObservation')}</Text></Pressable>
     {observations.length === 0 ? <Text style={[styles.empty, { textAlign }]}>{t('reportNoObservations')}</Text> : observations.slice().reverse().map((item) => <View key={item.id} style={styles.noteCard}>
       <Text style={[styles.noteDate, { textAlign }]}>{new Date(item.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB')}</Text>

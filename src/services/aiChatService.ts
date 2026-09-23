@@ -5,12 +5,14 @@ import { ageInQuery, ConversationMessage, isConcern, isFollowUp, resolveConversa
 import strings, { Lang } from '../i18n/strings';
 import { asksAboutTiming, developmentGuidance } from './developmentGuidance';
 import { asksForSpecialist, hasTargetedSpecialty, specialtyRecommendation } from './specialtyGuidance';
+import { ChildGender, genderizeChildText } from '../domain/child';
 
 export interface ChatContext {
   babyName?: string;
   ageMonths: number;
   currentStageId: string;
   lang: Lang;
+  gender?: ChildGender;
   completedMilestoneIds?: string[];
   milestoneStatuses?: Record<string, 'achieved' | 'emerging' | 'not_observed'>;
 }
@@ -31,7 +33,7 @@ const DEVELOPMENTAL_SPECIALIST_SOURCE = 'https://www.healthychildren.org/English
 const MOTOR_REFERRAL_SOURCE = 'https://publications.aap.org/pediatrics/article/131/6/e2016/31072/Motor-Delays-Early-Identification-and-Evaluation';
 
 function bilingual(ctx: ChatContext, ar: string, en: string): string {
-  return ctx.lang === 'ar' ? ar : en;
+  return genderizeChildText(ctx.lang === 'ar' ? ar : en, ctx.gender, ctx.lang);
 }
 
 function stageAge(id: string): number {
@@ -93,13 +95,13 @@ function supportTip(query: string, ctx: ChatContext): string {
 function finish(text: string, ctx: ChatContext, source = CDC_SOURCE): string {
   const specialistSources = text.includes('مسار التقييم المقترح') || text.includes('Suggested assessment route')
     ? `\n${EARLY_INTERVENTION_SOURCE}\n${LANGUAGE_REFERRAL_SOURCE}` : '';
-  return `${text}\n\n${strings.chatDisclaimer[ctx.lang]}\n${bilingual(ctx, 'المصدر:', 'Source:')} ${source}${specialistSources}`;
+  return genderizeChildText(`${text}\n\n${strings.chatDisclaimer[ctx.lang]}\n${bilingual(ctx, 'المصدر:', 'Source:')} ${source}${specialistSources}`, ctx.gender, ctx.lang);
 }
 
 export function ruleBasedReply(query: string, originalContext: ChatContext, history: ConversationMessage[] = []): string {
   const ctx = contextForQuery(query, originalContext, history);
   const resolved = resolveConversation(query, history);
-  const name = ctx.babyName || strings.defaultChildName[ctx.lang];
+  const name = ctx.babyName || strings[ctx.gender === 'female' ? 'defaultGirlName' : 'defaultBoyName'][ctx.lang];
   const urgent = urgentKind(query);
   if (urgent === 'emergency') return finish(bilingual(ctx,
     'لو طفلك عنده العلامة دي دلوقتي، زي صعوبة التنفس أو فقدان الوعي أو تشنج، اتصلي بالإسعاف المحلي أو روحي الطوارئ فورًا. ما تستنيش رد الشات أو موعد متابعة النمو.',
@@ -122,7 +124,7 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
 
   const specialty = specialtyRecommendation(resolved, ctx);
   if (specialty && asksForSpecialist(resolved) && hasTargetedSpecialty(specialty)) return finish(specialty, ctx);
-  const plans = developmentGuidance(resolved, ctx.ageMonths, ctx.lang, query);
+  const plans = developmentGuidance(resolved, ctx.ageMonths, ctx.lang, query, ctx.gender);
   if (plans.length) {
     const lines = [bilingual(ctx,
       `بالنسبة لـ${name}، في عمر ${formatAge(ctx.ageMonths, ctx.lang)}:`,
@@ -219,12 +221,13 @@ export function ruleBasedReply(query: string, originalContext: ChatContext, hist
 export function buildGrounding(query: string, originalContext: ChatContext, history: ConversationMessage[] = []): string {
   const ctx = contextForQuery(query, originalContext, history);
   const resolved = resolveConversation(query, history);
-  const plans = developmentGuidance(resolved, ctx.ageMonths, ctx.lang, query);
+  const plans = developmentGuidance(resolved, ctx.ageMonths, ctx.lang, query, ctx.gender);
   const relevant = plans.length ? plans.flatMap((plan) => plan.milestones)
     : relevantItems(MILESTONES.filter((item) => stageAge(item.ageStageId) <= ctx.ageMonths), resolved, ctx, (item) => item.title).slice(0, 4);
   const reference = relevant.length ? relevant : MILESTONES.filter((item) => item.ageStageId === ctx.currentStageId && stageAge(item.ageStageId) <= ctx.ageMonths);
   return [
     'Educational child-development support, not diagnosis. Respond in the requested language.',
+    `Child gender: ${ctx.gender ?? 'unknown'}. Use grammar and pronouns that match it everywhere; in Arabic use feminine forms for female and masculine forms for male.`,
     'Use only the reference below for medical claims. Ask a focused clarification for uncovered topics.',
     'Reference ages are not a diagnosis. Do not apply future-age warnings to a younger child.',
     `Child age for this answer: ${ctx.ageMonths} months. Lead with what is expected at this age, then give activities for current abilities.`,
@@ -298,7 +301,7 @@ export async function getAssistantResponse(query: string, ctx: ChatContext, hist
       const scoped = contextForQuery(text, ctx, boundedHistory);
       const reply = await callProxy(url, text, scoped, boundedHistory);
       const specialty = specialtyRecommendation(resolveConversation(text, boundedHistory), scoped);
-      return { text: specialty ? `${reply}\n\n${specialty}` : reply, source: 'proxy' };
+      return { text: genderizeChildText(specialty ? `${reply}\n\n${specialty}` : reply, scoped.gender, scoped.lang), source: 'proxy' };
     }
   } catch {
     return { text: local(), source: 'local', connectionFailed: true };

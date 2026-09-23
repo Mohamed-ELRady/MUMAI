@@ -16,6 +16,7 @@ import ChildrenScreen from '../screens/ChildrenScreen';
 import TimelineScreen from '../screens/TimelineScreen';
 import PrivacyScreen from '../screens/PrivacyScreen';
 import { colors } from '../theme/theme';
+import { genderizeChildText } from '../domain/child';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -30,7 +31,7 @@ function LanguageToggleButton() {
 
 export default function RootNavigator() {
   const { profile, isLoading, storageError, retryStorage } = useAppStore();
-  const { t, isLoading: languageLoading, isRTL } = useLanguage();
+  const { t, lang, isLoading: languageLoading, isRTL } = useLanguage();
   if (isLoading || languageLoading) return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator color={colors.primary} /></View>;
 
   return (
@@ -44,7 +45,7 @@ export default function RootNavigator() {
       config: { screens: { Home: 'MUMAI', Onboarding: 'MUMAI/profile', StageDetail: 'MUMAI/stage/:stageId', Chat: 'MUMAI/chat', WeeklyPlan: 'MUMAI/plan', Report: 'MUMAI/report', Children: 'MUMAI/children', Timeline: 'MUMAI/timeline', Privacy: 'MUMAI/privacy' } },
     }}>
       <Stack.Navigator
-        initialRouteName={profile ? 'Home' : 'Onboarding'}
+        key={profile?.gender ? 'profile-ready' : 'profile-required'}
         screenOptions={{
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.text,
@@ -52,22 +53,27 @@ export default function RootNavigator() {
           headerRight: () => <LanguageToggleButton />,
         }}
       >
-        <Stack.Screen
-          name="Onboarding"
-          component={OnboardingScreen}
-          options={({ route }) => ({
-            headerShown: true,
-            title: t(route.params?.isEditing ? 'editProfileTitle' : route.params?.isAdding ? 'addChildTitle' : 'appName'),
-          })}
-        />
-        <Stack.Screen name="Home" component={HomeScreen} options={{ title: t('appName') }} />
-        <Stack.Screen name="StageDetail" component={StageDetailScreen} options={{ title: t('stageDetailTitle') }} />
-        <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('chatTitle') }} />
-        <Stack.Screen name="WeeklyPlan" component={WeeklyPlanScreen} options={{ title: t('weeklyPlanTitle') }} />
-        <Stack.Screen name="Report" component={ReportScreen} options={{ title: t('reportTitle') }} />
-        <Stack.Screen name="Children" component={ChildrenScreen} options={{ title: t('childrenTitle') }} />
-        <Stack.Screen name="Timeline" component={TimelineScreen} options={{ title: t('timelineTitle') }} />
-        <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ title: t('privacyTitle') }} />
+        {!profile?.gender ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ title: t('appName') }} />
+        ) : (
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} options={{ title: t('appName') }} />
+            <Stack.Screen
+              name="Onboarding"
+              component={OnboardingScreen}
+              options={({ route }) => ({
+                title: route.params?.isAdding ? t('addChildTitle') : genderizeChildText(t('editProfileTitle'), profile.gender, lang),
+              })}
+            />
+            <Stack.Screen name="StageDetail" component={StageDetailScreen} options={{ title: t('stageDetailTitle') }} />
+            <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('chatTitle') }} />
+            <Stack.Screen name="WeeklyPlan" component={WeeklyPlanScreen} options={{ title: t('weeklyPlanTitle') }} />
+            <Stack.Screen name="Report" component={ReportScreen} options={{ title: t('reportTitle') }} />
+            <Stack.Screen name="Children" component={ChildrenScreen} options={{ title: t('childrenTitle') }} />
+            <Stack.Screen name="Timeline" component={TimelineScreen} options={{ title: t('timelineTitle') }} />
+            <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ title: t('privacyTitle') }} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
     </SafeAreaView>

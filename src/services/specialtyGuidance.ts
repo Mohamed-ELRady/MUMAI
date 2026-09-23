@@ -2,10 +2,12 @@ import { AGE_STAGES, Domain, MILESTONES } from '../data/milestones';
 import { Lang } from '../i18n/strings';
 import { isConcern } from './chatUnderstanding';
 import { conceptsIn, normalizeArabic } from './textMatch';
+import { ChildGender, genderizeChildText } from '../domain/child';
 
 export interface SpecialtyContext {
   ageMonths: number;
   lang: Lang;
+  gender?: ChildGender;
   milestoneStatuses?: Record<string, 'achieved' | 'emerging' | 'not_observed'>;
 }
 
@@ -67,7 +69,7 @@ export function specialtyRecommendation(query: string, ctx: SpecialtyContext): s
   const routes = routesFromQuery(query, ctx.ageMonths);
   const recorded = explicit && concepts.length === 0 ? recordedConcerns(ctx) : [];
   if (recorded.length) for (const route of routesFromRecordedConcerns(ctx)) routes.add(route);
-  const say = (ar: string, en: string) => ctx.lang === 'ar' ? ar : en;
+  const say = (ar: string, en: string) => genderizeChildText(ctx.lang === 'ar' ? ar : en, ctx.gender, ctx.lang);
 
   if (!routes.size) {
     if (!explicit) return undefined;

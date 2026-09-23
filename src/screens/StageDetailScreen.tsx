@@ -7,6 +7,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { AGE_STAGES, MILESTONES, RED_FLAGS, DOMAIN_LABELS, Domain } from '../data/milestones';
 import { colors, spacing, radii, severityColors, severityStringKey } from '../theme/theme';
 import { MilestoneStatus } from '../store/persistedState';
+import { genderizeChildReferences, genderizeChildText } from '../domain/child';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StageDetail'>;
 
@@ -15,11 +16,12 @@ const DOMAIN_ORDER: Domain[] = ['gross_motor', 'fine_motor', 'language', 'social
 export default function StageDetailScreen({ route, navigation }: Props) {
   const { stageId } = route.params;
   const stage = AGE_STAGES.find((s) => s.id === stageId);
-  const { milestoneStatuses, setMilestoneStatus } = useAppStore();
-  const { t, pick, isRTL } = useLanguage();
+  const { profile, milestoneStatuses, setMilestoneStatus } = useAppStore();
+  const { t, pick, lang, isRTL } = useLanguage();
   const [showRedFlags, setShowRedFlags] = useState(false);
   const textAlign = isRTL ? 'right' : 'left';
   const rowDir = isRTL ? 'row-reverse' : 'row';
+  const childText = (text: string) => genderizeChildText(text, profile?.gender, lang);
 
   const milestonesByDomain = useMemo(() => {
     const map: Partial<Record<Domain, typeof MILESTONES>> = {};
@@ -54,13 +56,13 @@ export default function StageDetailScreen({ route, navigation }: Props) {
               const selected = milestoneStatuses[m.id];
               return (
                 <View key={m.id} style={styles.milestoneRow}>
-                  <Text style={[styles.milestoneText, { textAlign }]}>{pick(m.title)}</Text>
+                  <Text style={[styles.milestoneText, { textAlign }]}>{childText(pick(m.title))}</Text>
                   <View accessibilityRole="radiogroup" style={[styles.statusRow, { flexDirection: rowDir }]}>
                     {choices.map((choice) => {
                       const active = selected === choice.status;
-                      return <Pressable key={choice.status} accessibilityRole="radio" accessibilityState={{ checked: active }} accessibilityLabel={`${pick(m.title)}: ${t(choice.label)}`}
+                      return <Pressable key={choice.status} accessibilityRole="radio" accessibilityState={{ checked: active }} accessibilityLabel={`${childText(pick(m.title))}: ${childText(t(choice.label))}`}
                         onPress={() => setMilestoneStatus(m.id, choice.status)} style={[styles.statusChip, active && styles[`status_${choice.status}`]]}>
-                        <Text style={[styles.statusChipText, active && styles.statusChipTextActive]}>{t(choice.label)}</Text>
+                        <Text style={[styles.statusChipText, active && styles.statusChipTextActive]}>{childText(t(choice.label))}</Text>
                       </Pressable>;
                     })}
                   </View>
@@ -89,19 +91,19 @@ export default function StageDetailScreen({ route, navigation }: Props) {
               <View key={rf.id} style={styles.redFlagCard}>
                 <View style={[styles.redFlagHeader, { flexDirection: rowDir }]}>
                   <View style={[styles.severityDot, { backgroundColor: severityColors[rf.severity] }]} />
-                  <Text style={[styles.redFlagSign, { textAlign }]}>{pick(rf.warningSign)}</Text>
+                  <Text style={[styles.redFlagSign, { textAlign }]}>{childText(pick(rf.warningSign))}</Text>
                 </View>
                 <Text style={[styles.redFlagMeta, { textAlign }]}>
-                  {t('possibleCausesLabel')} {rf.possibleCauses.map((c) => pick(c)).join(isRTL ? '، ' : ', ')}
+                  {t('possibleCausesLabel')} {rf.possibleCauses.map((c) => genderizeChildReferences(pick(c), profile?.gender, lang)).join(isRTL ? '، ' : ', ')}
                 </Text>
                 <Text style={[styles.redFlagMeta, { textAlign }]}>
                   {t('assessmentLabel')} {t(severityStringKey[rf.severity])}
                 </Text>
                 <Text style={[styles.redFlagMeta, { textAlign }]}>
-                  {t('specialistLabel')} {pick(rf.specialist)}
+                  {t('specialistLabel')} {childText(pick(rf.specialist))}
                 </Text>
                 {!!rf.notes && (
-                  <Text style={[styles.redFlagNotes, { textAlign }]}>{pick(rf.notes)}</Text>
+                  <Text style={[styles.redFlagNotes, { textAlign }]}>{genderizeChildReferences(pick(rf.notes), profile?.gender, lang)}</Text>
                 )}
               </View>
             ))}

@@ -10,6 +10,7 @@ import { BLOOD_TYPES, BloodType } from '../store/persistedState';
 import { useLanguage } from '../i18n/LanguageContext';
 import { colors, spacing, radii } from '../theme/theme';
 import { parseCalendarDate, toDateInputValue, validBirthDate } from '../data/ageHelpers';
+import { ChildGender, genderizeChildText } from '../domain/child';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
@@ -157,18 +158,23 @@ function NativeDatePicker({
 
 export default function OnboardingScreen({ navigation, route }: Props) {
   const { profile, setProfile, createChild, loadDemoData } = useAppStore();
-  const { t, isRTL } = useLanguage();
-  const isEditing = !!route.params?.isEditing;
+  const { t, lang, isRTL } = useLanguage();
   const isAdding = !!route.params?.isAdding;
-  const [name, setName] = useState(isEditing ? profile?.name ?? '' : '');
-  const [photoUri, setPhotoUri] = useState(isEditing ? profile?.photoUri : undefined);
-  const [bloodType, setBloodType] = useState<BloodType | undefined>(isEditing ? profile?.bloodType : undefined);
+  const isEditing = !isAdding && (!!route.params?.isEditing || !!profile?.gender);
+  const isCompletingProfile = !!profile && !profile.gender && !isAdding;
+  const loadExistingProfile = isEditing || isCompletingProfile;
+  const [name, setName] = useState(loadExistingProfile ? profile?.name ?? '' : '');
+  const [gender, setGender] = useState<ChildGender | undefined>(loadExistingProfile ? profile?.gender : undefined);
+  const [photoUri, setPhotoUri] = useState(loadExistingProfile ? profile?.photoUri : undefined);
+  const [bloodType, setBloodType] = useState<BloodType | undefined>(loadExistingProfile ? profile?.bloodType : undefined);
   const [photoError, setPhotoError] = useState(false);
   const [birthDate, setBirthDate] = useState<Date | null>(
-    isEditing && profile ? parseCalendarDate(profile.birthDateISO) ?? new Date(profile.birthDateISO) : null
+    loadExistingProfile && profile ? parseCalendarDate(profile.birthDateISO) ?? new Date(profile.birthDateISO) : null
   );
   const [showDateError, setShowDateError] = useState(false);
+  const [showGenderError, setShowGenderError] = useState(false);
   const textAlign = isRTL ? 'right' : 'left';
+  const formText = (text: string) => genderizeChildText(text, gender, lang);
 
   function handleBirthDateChange(date: Date | null) {
     setBirthDate(date);
@@ -209,32 +215,34 @@ export default function OnboardingScreen({ navigation, route }: Props) {
 
   function handleContinue() {
     const birthDateISO = birthDate ? validBirthDate(toDateInputValue(birthDate)) : null;
-    if (!birthDateISO) { setShowDateError(true); return; }
+    setShowDateError(!birthDateISO);
+    setShowGenderError(!gender);
+    if (!birthDateISO || !gender) return;
     const nextProfile = {
-      name: name.trim() || t('defaultChildName'),
+      name: name.trim() || t(gender === 'female' ? 'defaultGirlName' : 'defaultBoyName'),
       birthDateISO,
+      gender,
       ...(photoUri ? { photoUri } : {}),
       ...(bloodType ? { bloodType } : {}),
+      ...(!isAdding && profile?.isDemo ? { isDemo: true } : {}),
     };
     if (isAdding) createChild(nextProfile);
     else setProfile(nextProfile);
     if (isEditing || isAdding) navigation.goBack();
-    else navigation.replace('Home');
   }
 
   function openDemo() {
     loadDemoData();
-    navigation.replace('Home');
   }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80}>
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>{isEditing ? t('editProfileTitle') : isAdding ? t('addChildTitle') : t('onboardingTitle')}</Text>
-      {!isEditing && !isAdding && <Text style={styles.subtitle}>{t('onboardingSubtitle')}</Text>}
+      <Text style={styles.title}>{formText(isEditing ? t('editProfileTitle') : isAdding ? t('addChildTitle') : isCompletingProfile ? t('completeProfileTitle') : t('onboardingTitle'))}</Text>
+      {!isEditing && !isAdding && <Text style={styles.subtitle}>{formText(t(isCompletingProfile ? 'completeProfileSubtitle' : 'onboardingSubtitle'))}</Text>}
 
       <View style={[styles.optionalHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <Text style={styles.labelInline}>{t('childPhotoLabel')}</Text>
+        <Text style={styles.labelInline}>{formText(t('childPhotoLabel'))}</Text>
         <Text style={styles.optionalBadge}>{t('optionalLabel')}</Text>
       </View>
       <View style={[styles.photoRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
@@ -259,7 +267,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
       </View>
       {photoError && <Text accessibilityRole="alert" style={[styles.fieldError, { textAlign }]}>{t('photoPickerError')}</Text>}
 
-      <Text style={[styles.label, { textAlign }]}>{t('childNameLabel')}</Text>
+      <Text style={[styles.label, { textAlign }]}>{formText(t('childNameLabel'))}</Text>
       <TextInput
         style={styles.input}
         placeholder={t('childNamePlaceholder')}
@@ -268,8 +276,33 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         onChangeText={setName}
         textAlign={textAlign}
         maxLength={80}
-        accessibilityLabel={t('childNameLabel')}
+        accessibilityLabel={formText(t('childNameLabel'))}
       />
+
+      <View style={[styles.requiredHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <Text style={styles.labelInline}>{formText(t('childGenderLabel'))}</Text>
+        <Text style={styles.requiredBadge}>{t('requiredLabel')}</Text>
+      </View>
+      <View accessibilityRole="radiogroup" style={[styles.genderOptions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        {(['male', 'female'] as ChildGender[]).map((option) => {
+          const selected = gender === option;
+          return (
+            <Pressable
+              key={option}
+              accessibilityRole="radio"
+              accessibilityLabel={t(option === 'male' ? 'genderMale' : 'genderFemale')}
+              accessibilityState={{ checked: selected }}
+              style={[styles.genderOption, selected && styles.genderOptionSelected]}
+              onPress={() => { setGender(option); setShowGenderError(false); }}
+            >
+              <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>{selected && <View style={styles.radioInner} />}</View>
+              <Text style={[styles.genderOptionText, selected && styles.genderOptionTextSelected]}>{t(option === 'male' ? 'genderMale' : 'genderFemale')}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={[styles.optionalHint, { textAlign }]}>{formText(t('childGenderHint'))}</Text>
+      {showGenderError && <Text accessibilityRole="alert" style={[styles.fieldError, { textAlign }]}>{t('genderRequiredError')}</Text>}
 
       <Text style={[styles.label, { textAlign }]}>{t('birthDateLabel')}</Text>
       <Text style={[styles.dateHint, { textAlign }]}>{t('birthDateHint')}</Text>
@@ -312,13 +345,13 @@ export default function OnboardingScreen({ navigation, route }: Props) {
           );
         })}
       </View>
-      <Text style={[styles.optionalHint, { textAlign }]}>{t('optionalProfileHint')}</Text>
-      <Text style={[styles.privacyHint, { textAlign }]}>{t('profilePrivacyHint')}</Text>
+      <Text style={[styles.optionalHint, { textAlign }]}>{formText(t('optionalProfileHint'))}</Text>
+      <Text style={[styles.privacyHint, { textAlign }]}>{formText(t('profilePrivacyHint'))}</Text>
 
       <Pressable accessibilityRole="button" style={styles.cta} onPress={handleContinue}>
-        <Text style={styles.ctaText}>{isEditing ? t('saveChangesCta') : isAdding ? t('addChildCta') : t('startTrackingCta')}</Text>
+        <Text style={styles.ctaText}>{formText(isEditing ? t('saveChangesCta') : isAdding ? t('addChildCta') : isCompletingProfile ? t('completeProfileCta') : t('startTrackingCta'))}</Text>
       </Pressable>
-      {!isEditing && !isAdding && <Pressable accessibilityRole="button" style={styles.demoButton} onPress={openDemo}>
+      {!isEditing && !isAdding && !isCompletingProfile && <Pressable accessibilityRole="button" style={styles.demoButton} onPress={openDemo}>
         <Text style={styles.demoButtonText}>{t('tryDemoCta')}</Text>
       </Pressable>}
     </ScrollView>
@@ -333,7 +366,17 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, color: colors.text, marginBottom: spacing.xs, marginTop: spacing.md },
   labelInline: { fontSize: 14, color: colors.text, fontWeight: '600' },
   optionalHeader: { alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm, marginTop: spacing.md },
+  requiredHeader: { alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm, marginTop: spacing.lg },
   optionalBadge: { color: colors.primaryDark, backgroundColor: colors.chipBg, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3, fontSize: 11, fontWeight: '700' },
+  requiredBadge: { color: '#fff', backgroundColor: colors.primaryDark, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3, fontSize: 11, fontWeight: '700' },
+  genderOptions: { width: '100%', gap: spacing.sm },
+  genderOption: { flex: 1, minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, backgroundColor: colors.surface, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md },
+  genderOptionSelected: { backgroundColor: colors.chipBg, borderColor: colors.primary, borderWidth: 2 },
+  genderOptionText: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  genderOptionTextSelected: { color: colors.primaryDark },
+  radioOuter: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.textMuted, alignItems: 'center', justifyContent: 'center' },
+  radioOuterSelected: { borderColor: colors.primaryDark },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primaryDark },
   photoRow: { alignItems: 'center', gap: spacing.md },
   photoButton: { width: 82, height: 82, borderRadius: 41, borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.chipBg, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },

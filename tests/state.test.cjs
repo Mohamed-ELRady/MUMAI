@@ -75,6 +75,20 @@ test('optional child photo and blood type are preserved without becoming require
   }), { name: 'Y', birthDateISO: '2024-01-02' });
 });
 
+test('gender is required for new writes while legacy profiles remain recoverable', () => {
+  assert.equal(validateProfile({ name: 'خديجة', birthDateISO: '2024-01-02' }, true), null);
+  assert.deepEqual(validateProfile({ name: 'خديجة', birthDateISO: '2024-01-02', gender: 'female' }, true), {
+    name: 'خديجة', birthDateISO: '2024-01-02', gender: 'female',
+  });
+  assert.deepEqual(validateProfile({ name: 'يوسف', birthDateISO: '2024-01-02', gender: 'male' }, true), {
+    name: 'يوسف', birthDateISO: '2024-01-02', gender: 'male',
+  });
+  assert.equal(validateProfile({ name: 'X', birthDateISO: '2024-01-02', gender: 'unknown' }, true), null);
+  const legacy = restoreState(JSON.stringify({ profile: { name: 'خديجة', birthDateISO: '2024-01-02' }, completedMilestoneIds: ['ms-m1-1'] }));
+  assert.equal(legacy.children[0].profile.gender, undefined);
+  assert.equal(legacy.children[0].milestoneStatuses['ms-m1-1'], 'achieved');
+});
+
 test('restoration validates status, weekly activity and observation records', () => {
   const raw = JSON.stringify({
     profile: { name: 'Y', birthDateISO: '2024-01-31' },

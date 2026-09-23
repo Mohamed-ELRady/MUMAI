@@ -1,10 +1,13 @@
 import { validBirthDate } from '../data/ageHelpers';
 import { MILESTONES } from '../data/milestones';
 import { Lang } from '../i18n/strings';
+import { CHILD_GENDERS, ChildGender } from '../domain/child';
 
 export interface BabyProfile {
   name: string;
   birthDateISO: string;
+  /** Optional only while migrating profiles created before gender was required. */
+  gender?: ChildGender;
   photoUri?: string;
   bloodType?: BloodType;
   isDemo?: boolean;
@@ -43,6 +46,7 @@ export const defaultState: PersistedState = { activeChildId: null, children: [] 
 const knownIds = new Set(MILESTONES.map((item) => item.id));
 const statuses = new Set<MilestoneStatus>(['achieved', 'emerging', 'not_observed']);
 const bloodTypes = new Set<string>(BLOOD_TYPES);
+const childGenders = new Set<string>(CHILD_GENDERS);
 const MAX_PHOTO_URI_LENGTH = 750_000;
 
 function validId(value: unknown, fallback: string): string {
@@ -59,16 +63,18 @@ function validPhotoUri(value: unknown): string | undefined {
   return /^(file|content|ph|assets-library):/i.test(photoUri) || /^data:image\/(jpeg|png|webp);base64,/i.test(photoUri) ? photoUri : undefined;
 }
 
-export function validateProfile(value: unknown): BabyProfile | null {
+export function validateProfile(value: unknown, requireGender = false): BabyProfile | null {
   if (!value || typeof value !== 'object' || !('name' in value) || !('birthDateISO' in value)
     || typeof value.name !== 'string' || !value.name.trim() || typeof value.birthDateISO !== 'string') return null;
   const birthDateISO = validBirthDate(value.birthDateISO);
   if (!birthDateISO) return null;
   const photoUri = 'photoUri' in value ? validPhotoUri(value.photoUri) : undefined;
   const bloodType = 'bloodType' in value && typeof value.bloodType === 'string' && bloodTypes.has(value.bloodType) ? value.bloodType as BloodType : undefined;
+  const gender = 'gender' in value && typeof value.gender === 'string' && childGenders.has(value.gender) ? value.gender as ChildGender : undefined;
+  if (requireGender && !gender) return null;
   return {
     name: value.name.trim().slice(0, 80), birthDateISO,
-    ...(photoUri ? { photoUri } : {}), ...(bloodType ? { bloodType } : {}),
+    ...(gender ? { gender } : {}), ...(photoUri ? { photoUri } : {}), ...(bloodType ? { bloodType } : {}),
     ...('isDemo' in value && value.isDemo === true ? { isDemo: true } : {}),
   };
 }

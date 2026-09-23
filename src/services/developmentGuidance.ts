@@ -1,6 +1,7 @@
 import { AGE_STAGES, MILESTONES, Milestone } from '../data/milestones';
 import { Lang } from '../i18n/strings';
 import { conceptsIn, hasPhrase } from './textMatch';
+import { ChildGender, genderizeChildText } from '../domain/child';
 
 export interface DevelopmentGuidance {
   concepts: string[];
@@ -31,9 +32,9 @@ export function asksAboutTiming(query: string): boolean {
   return ['امتى', 'متى', 'اي سن', 'عمر كام', 'when', 'what age'].some((phrase) => hasPhrase(query, phrase));
 }
 
-export function developmentGuidance(query: string, age: number, lang: Lang, latestQuestion = query): DevelopmentGuidance[] {
+export function developmentGuidance(query: string, age: number, lang: Lang, latestQuestion = query, gender?: ChildGender): DevelopmentGuidance[] {
   const concepts = conceptsIn(query);
-  const say = (ar: string, en: string) => lang === 'ar' ? ar : en;
+  const say = (ar: string, en: string) => genderizeChildText(lang === 'ar' ? ar : en, gender, lang);
   const plans: DevelopmentGuidance[] = [];
   const timing = asksAboutTiming(latestQuestion);
 

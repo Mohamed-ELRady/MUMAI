@@ -19,6 +19,7 @@ import { currentStageForAge } from '../data/ageHelpers';
 import { useAgeMonths } from '../data/useAgeMonths';
 import { getAssistantResponse, MAX_QUERY_LENGTH } from '../services/aiChatService';
 import { colors, spacing, radii } from '../theme/theme';
+import { genderizeChildText } from '../domain/child';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
@@ -31,8 +32,9 @@ export default function ChatScreen({ route }: Props) {
   const ageMonths = useAgeMonths(profile?.birthDateISO);
   const stageId = route.params?.stageId ?? currentStageForAge(ageMonths).id;
   const babyName = profile?.name ?? t('defaultChildName');
+  const childText = (text: string) => genderizeChildText(text, profile?.gender, lang);
 
-  const [input, setInput] = useState(route.params?.askRemaining ? t('chatRemainingQuestion') : '');
+  const [input, setInput] = useState(route.params?.askRemaining ? childText(t('chatRemainingQuestion')) : '');
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList>(null);
   const sending = useRef(false);
@@ -40,8 +42,9 @@ export default function ChatScreen({ route }: Props) {
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
   function confirmClear() {
-    if (Platform.OS === 'web') { if (window.confirm(t('clearChatConfirm'))) clearChatMessages(); return; }
-    Alert.alert('', t('clearChatConfirm'), [{ text: t('cancelButton'), style: 'cancel' }, { text: t('confirmButton'), style: 'destructive', onPress: clearChatMessages }]);
+    const message = childText(t('clearChatConfirm'));
+    if (Platform.OS === 'web') { if (window.confirm(message)) clearChatMessages(); return; }
+    Alert.alert('', message, [{ text: t('cancelButton'), style: 'cancel' }, { text: t('confirmButton'), style: 'destructive', onPress: clearChatMessages }]);
   }
 
   async function handleSend(suggestion?: string) {
@@ -58,6 +61,7 @@ export default function ChatScreen({ route }: Props) {
         ageMonths,
         currentStageId: stageId,
         lang,
+        gender: profile?.gender,
         completedMilestoneIds,
         milestoneStatuses,
       }, messages);
@@ -87,9 +91,9 @@ export default function ChatScreen({ route }: Props) {
         data={messages}
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
-        ListHeaderComponent={<View style={[styles.bubble, styles.bubbleAssistant, { maxWidth: '100%' }]}><Text style={[styles.bubbleTextAssistant, { textAlign }]}>{t('chatIntro', { name: babyName })}</Text></View>}
+        ListHeaderComponent={<View style={[styles.bubble, styles.bubbleAssistant, { maxWidth: '100%' }]}><Text style={[styles.bubbleTextAssistant, { textAlign }]}>{childText(t('chatIntro', { name: babyName }))}</Text></View>}
         ListFooterComponent={messages.length === 0 ? <View style={{ gap: spacing.sm }}>
-          {(['chatOverviewQuestion', ageMonths < 12 ? 'chatBabblingQuestion' : 'chatSpeechQuestion', 'chatRemainingQuestion', 'chatSpecialistQuestion'] as const).map((key) => <Pressable key={key} accessibilityRole="button" disabled={loading} onPress={() => handleSend(t(key))} style={{ minHeight: 44, justifyContent: 'center', padding: spacing.sm, backgroundColor: colors.chipBg, borderRadius: radii.sm }}><Text style={{ color: colors.primaryDark, textAlign }}>{t(key)}</Text></Pressable>)}
+          {(['chatOverviewQuestion', ageMonths < 12 ? 'chatBabblingQuestion' : 'chatSpeechQuestion', 'chatRemainingQuestion', 'chatSpecialistQuestion'] as const).map((key) => { const suggestion = childText(t(key)); return <Pressable key={key} accessibilityRole="button" disabled={loading} onPress={() => handleSend(suggestion)} style={{ minHeight: 44, justifyContent: 'center', padding: spacing.sm, backgroundColor: colors.chipBg, borderRadius: radii.sm }}><Text style={{ color: colors.primaryDark, textAlign }}>{suggestion}</Text></Pressable>; })}
         </View> : null}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.messageContent}
@@ -104,7 +108,7 @@ export default function ChatScreen({ route }: Props) {
             ]}
           >
             <Text selectable style={[item.role === 'user' ? styles.bubbleTextUser : styles.bubbleTextAssistant, { textAlign: item.lang === 'ar' ? 'right' : 'left' }]}>
-              {item.text}
+              {item.role === 'assistant' ? genderizeChildText(item.text, profile?.gender, item.lang) : item.text}
             </Text>
             {item.source && <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: spacing.sm, textAlign }}>{t(item.connectionFailed ? 'chatConnectionFailed' : item.source === 'proxy' ? 'chatProxy' : 'chatLocal')}</Text>}
           </View>

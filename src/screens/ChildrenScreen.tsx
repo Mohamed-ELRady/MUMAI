@@ -5,28 +5,31 @@ import { RootStackParamList } from '../navigation/types';
 import { useAppStore } from '../store/AppStore';
 import { useLanguage } from '../i18n/LanguageContext';
 import { colors, radii, spacing } from '../theme/theme';
+import { childGenderLabel, genderizeChildText } from '../domain/child';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Children'>;
 
 export default function ChildrenScreen({ navigation }: Props) {
   const { children, activeChildId, switchChild, deleteChild } = useAppStore();
-  const { t, isRTL } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
   const textAlign = isRTL ? 'right' : 'left';
   const rowDir = isRTL ? 'row-reverse' : 'row';
   function remove(id: string) {
-    const action = () => { deleteChild(id); if (children.length === 1) navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] }); };
-    if (Platform.OS === 'web') { if (window.confirm(t('deleteChildConfirm'))) action(); }
-    else Alert.alert('', t('deleteChildConfirm'), [{ text: t('cancelButton'), style: 'cancel' }, { text: t('confirmButton'), style: 'destructive', onPress: action }]);
+    const target = children.find((child) => child.id === id);
+    const message = genderizeChildText(t('deleteChildConfirm'), target?.profile.gender, lang);
+    const action = () => { deleteChild(id); };
+    if (Platform.OS === 'web') { if (window.confirm(message)) action(); }
+    else Alert.alert('', message, [{ text: t('cancelButton'), style: 'cancel' }, { text: t('confirmButton'), style: 'destructive', onPress: action }]);
   }
   return <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
     {children.map((child) => <View key={child.id} style={[styles.card, child.id === activeChildId && styles.activeCard]}>
       <View style={{ flexDirection: rowDir, alignItems: 'center', gap: spacing.md }}>
         {child.profile.photoUri ? <Image source={{ uri: child.profile.photoUri }} style={styles.photo} /> : <View style={styles.placeholder}><Text>👶</Text></View>}
-        <View style={{ flex: 1 }}><Text style={[styles.name, { textAlign }]}>{child.profile.name}</Text><Text style={[styles.date, { textAlign }]}>{child.profile.birthDateISO}</Text></View>
+        <View style={{ flex: 1 }}><Text style={[styles.name, { textAlign }]}>{child.profile.name}</Text><Text style={[styles.date, { textAlign }]}>{child.profile.birthDateISO}{child.profile.gender ? ` · ${childGenderLabel(child.profile.gender, lang)}` : ''}</Text></View>
         {child.id === activeChildId && <Text style={styles.badge}>{t('activeChild')}</Text>}
       </View>
       <View style={[styles.actions, { flexDirection: rowDir }]}>
-        {child.id !== activeChildId && <Pressable accessibilityRole="button" style={styles.select} onPress={() => { switchChild(child.id); navigation.navigate('Home'); }}><Text style={styles.selectText}>{t('switchChild')}</Text></Pressable>}
+        {child.id !== activeChildId && <Pressable accessibilityRole="button" style={styles.select} onPress={() => { switchChild(child.id); if (child.profile.gender) navigation.navigate('Home'); }}><Text style={styles.selectText}>{t('switchChild')}</Text></Pressable>}
         <Pressable accessibilityRole="button" style={styles.delete} onPress={() => remove(child.id)}><Text style={styles.deleteText}>{t('deleteChild')}</Text></Pressable>
       </View>
     </View>)}

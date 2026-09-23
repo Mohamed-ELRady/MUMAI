@@ -5,13 +5,14 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { buildWeeklyPlan, planFocusLabel, weekKey } from '../services/weeklyPlan';
 import { useAppStore } from '../store/AppStore';
 import { colors, radii, spacing } from '../theme/theme';
+import { genderizeChildText } from '../domain/child';
 
 export default function WeeklyPlanScreen() {
   const { profile, milestoneStatuses, weeklyActivityChecks, toggleWeeklyActivity } = useAppStore();
   const { t, pick, lang, isRTL } = useLanguage();
   const ageMonths = useAgeMonths(profile?.birthDateISO);
   const key = weekKey();
-  const plan = useMemo(() => buildWeeklyPlan(ageMonths, milestoneStatuses), [ageMonths, milestoneStatuses]);
+  const plan = useMemo(() => buildWeeklyPlan(ageMonths, milestoneStatuses, profile?.gender), [ageMonths, milestoneStatuses, profile?.gender]);
   const checked = weeklyActivityChecks[key] ?? [];
   const textAlign = isRTL ? 'right' : 'left';
   const rowDir = isRTL ? 'row-reverse' : 'row';
@@ -19,7 +20,7 @@ export default function WeeklyPlanScreen() {
   return <ScrollView style={styles.container} contentContainerStyle={styles.content}>
     <View style={styles.introCard}>
       <Text style={[styles.eyebrow, { textAlign }]}>{t('weeklyProgress', { done: checked.filter((id) => plan.some((item) => item.id === id)).length, total: plan.length })}</Text>
-      <Text style={[styles.intro, { textAlign }]}>{t('weeklyPlanIntro')}</Text>
+      <Text style={[styles.intro, { textAlign }]}>{genderizeChildText(t('weeklyPlanIntro'), profile?.gender, lang)}</Text>
     </View>
     {plan.map((activity, index) => {
       const done = checked.includes(activity.id);
@@ -32,13 +33,13 @@ export default function WeeklyPlanScreen() {
           </View>
         </View>
         <Text style={[styles.instruction, { textAlign }]}>{pick(activity.instruction)}</Text>
-        <Text style={[styles.focus, { textAlign }]}>{t('weeklyFocus')} {planFocusLabel(activity, lang)}</Text>
+        <Text style={[styles.focus, { textAlign }]}>{t('weeklyFocus')} {planFocusLabel(activity, lang, profile?.gender)}</Text>
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: done }} onPress={() => toggleWeeklyActivity(key, activity.id)} style={[styles.doneButton, done && styles.doneButtonActive]}>
           <Text style={[styles.doneButtonText, done && styles.doneButtonTextActive]}>{done ? '✓ ' : ''}{t('weeklyDone')}</Text>
         </Pressable>
       </View>;
     })}
-    <Text style={[styles.safety, { textAlign }]}>{t('weeklySafety')}</Text>
+    <Text style={[styles.safety, { textAlign }]}>{genderizeChildText(t('weeklySafety'), profile?.gender, lang)}</Text>
   </ScrollView>;
 }
 

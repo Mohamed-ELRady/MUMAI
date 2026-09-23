@@ -4,19 +4,20 @@ import { useAppStore } from '../store/AppStore';
 import { useLanguage } from '../i18n/LanguageContext';
 import { MILESTONES } from '../data/milestones';
 import { colors, radii, spacing } from '../theme/theme';
+import { genderizeChildText } from '../domain/child';
 
 export default function TimelineScreen() {
-  const { milestoneStatuses, milestoneUpdatedAt, observations } = useAppStore();
+  const { profile, milestoneStatuses, milestoneUpdatedAt, observations } = useAppStore();
   const { t, pick, lang, isRTL } = useLanguage();
   const textAlign = isRTL ? 'right' : 'left';
   const events = useMemo(() => {
     const milestoneEvents = Object.entries(milestoneUpdatedAt).flatMap(([id, date]) => {
       const milestone = MILESTONES.find((item) => item.id === id); const status = milestoneStatuses[id];
-      return milestone && status ? [{ id: `m-${id}`, date, title: pick(milestone.title), detail: t(status === 'achieved' ? 'statusAchieved' : status === 'emerging' ? 'statusEmerging' : 'statusNotObserved') }] : [];
+      return milestone && status ? [{ id: `m-${id}`, date, title: genderizeChildText(pick(milestone.title), profile?.gender, lang), detail: genderizeChildText(t(status === 'achieved' ? 'statusAchieved' : status === 'emerging' ? 'statusEmerging' : 'statusNotObserved'), profile?.gender, lang) }] : [];
     });
     const notes = observations.map((note) => ({ id: `n-${note.id}`, date: note.createdAt, title: t('timelineObservation'), detail: note.text }));
     return [...milestoneEvents, ...notes].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [milestoneStatuses, milestoneUpdatedAt, observations, lang]);
+  }, [milestoneStatuses, milestoneUpdatedAt, observations, profile?.gender, lang]);
   return <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
     {!events.length && <Text style={[styles.empty, { textAlign }]}>{t('timelineEmpty')}</Text>}
     {events.map((event) => <View key={event.id} style={styles.card}><Text style={[styles.date, { textAlign }]}>{new Date(event.date).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}</Text><Text style={[styles.title, { textAlign }]}>{event.title}</Text><Text style={[styles.detail, { textAlign }]}>{event.detail}</Text></View>)}

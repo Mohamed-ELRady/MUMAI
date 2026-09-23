@@ -6,6 +6,7 @@ import { useAppStore } from '../store/AppStore';
 import { useLanguage } from '../i18n/LanguageContext';
 import { exportBackup, pickBackup } from '../services/dataTransfer';
 import { colors, radii, spacing } from '../theme/theme';
+import { genderizeChildText } from '../domain/child';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Privacy'>;
 
@@ -15,8 +16,8 @@ function confirm(message: string, cancel: string, ok: string, action: () => void
 }
 
 export default function PrivacyScreen({ navigation }: Props) {
-  const { exportData, importData, deleteAllData } = useAppStore();
-  const { t, isRTL } = useLanguage();
+  const { profile, exportData, importData, deleteAllData } = useAppStore();
+  const { t, lang, isRTL } = useLanguage();
   const [notice, setNotice] = useState('');
   const textAlign = isRTL ? 'right' : 'left';
 
@@ -29,15 +30,15 @@ export default function PrivacyScreen({ navigation }: Props) {
       if (raw === null) return;
       const success = importData(raw);
       setNotice(t(success ? 'dataImported' : 'dataImportError'));
-      if (success) navigation.navigate('Home');
+      if (success) navigation.popToTop();
     } catch { setNotice(t('dataImportError')); }
   }
   function handleDelete() {
-    confirm(t('deleteAllConfirm'), t('cancelButton'), t('confirmButton'), () => { deleteAllData(); navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] }); });
+    confirm(t('deleteAllConfirm'), t('cancelButton'), t('confirmButton'), deleteAllData);
   }
 
   return <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-    <View style={styles.card}><Text style={[styles.intro, { textAlign }]}>{t('privacyIntro')}</Text></View>
+    <View style={styles.card}><Text style={[styles.intro, { textAlign }]}>{genderizeChildText(t('privacyIntro'), profile?.gender, lang)}</Text></View>
     <Pressable accessibilityRole="button" style={styles.button} onPress={handleExport}><Text style={styles.buttonText}>{t('exportData')}</Text></Pressable>
     <Pressable accessibilityRole="button" style={styles.button} onPress={handleImport}><Text style={styles.buttonText}>{t('importData')}</Text></Pressable>
     <Pressable accessibilityRole="button" style={styles.dangerButton} onPress={handleDelete}><Text style={styles.dangerText}>{t('deleteAllData')}</Text></Pressable>

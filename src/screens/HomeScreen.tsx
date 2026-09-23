@@ -8,6 +8,7 @@ import { AGE_STAGES, MILESTONES } from '../data/milestones';
 import { currentStageForAge, formatAge, stageIndex } from '../data/ageHelpers';
 import { useAgeMonths } from '../data/useAgeMonths';
 import { colors, spacing, radii } from '../theme/theme';
+import { genderizeChildText } from '../domain/child';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -24,6 +25,7 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => { if (!profile) navigation.replace('Onboarding'); }, [profile, navigation]);
 
   if (!profile) return null;
+  const childText = (text: string) => genderizeChildText(text, profile.gender, lang);
 
   return (
     <View style={styles.container}>
@@ -58,7 +60,7 @@ export default function HomeScreen({ navigation }: Props) {
             <View style={[styles.actionRow, { flexDirection: rowDir }]}>
               <Pressable accessibilityRole="button" style={[styles.actionCard, isCompact && styles.actionCardCompact]} onPress={() => navigation.navigate('WeeklyPlan')}>
                 <Text style={[styles.actionTitle, { textAlign }]}>{t('weeklyPlanCard')}</Text>
-                <Text style={[styles.actionHint, { textAlign }]}>{t('weeklyPlanCardHint')}</Text>
+                <Text style={[styles.actionHint, { textAlign }]}>{childText(t('weeklyPlanCardHint'))}</Text>
               </Pressable>
               <Pressable accessibilityRole="button" style={[styles.actionCard, isCompact && styles.actionCardCompact]} onPress={() => navigation.navigate('Report')}>
                 <Text style={[styles.actionTitle, { textAlign }]}>{t('reportCard')}</Text>
@@ -77,7 +79,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Text style={[styles.actionHint, { textAlign }]}>{t('privacyCardHint')}</Text>
               </Pressable>
             </View>
-            {profile.bloodType && <Text style={[styles.bloodDisclaimer, { textAlign }]}>{t('bloodTypeDisclaimer')}</Text>}
+            {profile.bloodType && <Text style={[styles.bloodDisclaimer, { textAlign }]}>{childText(t('bloodTypeDisclaimer'))}</Text>}
           </View>
         )}
         renderItem={({ item }) => {
@@ -106,7 +108,7 @@ export default function HomeScreen({ navigation }: Props) {
                   {pick(item.label)}
                 </Text>
                 <Text style={[styles.stageProgress, { textAlign }]}>
-                  {t('stageTrackingProgress', { recorded: recordedCount, total: stageMilestones.length, achieved: doneCount })}
+                  {genderizeChildText(t('stageTrackingProgress', { recorded: recordedCount, total: stageMilestones.length, achieved: doneCount }), profile.gender, lang)}
                   {isFuture ? ` · ${t('notDueYet')}` : ''}
                 </Text>
               </View>

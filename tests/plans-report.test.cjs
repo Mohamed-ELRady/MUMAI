@@ -34,3 +34,16 @@ test('doctor report includes current statuses, dated notes, source and escaped f
   assert.match(html, /&lt;script&gt;/);
   assert.deepEqual(statusCounts({ 'ms-m6-2-v2': 'emerging', 'ms-m6-4': 'achieved' }, 'm6'), { achieved: 1, emerging: 1, notObserved: 0, unrecorded: 3, total: 5 });
 });
+
+test('female weekly plan and doctor report consistently use feminine wording', () => {
+  const plan = buildWeeklyPlan(18, { 'ms-m18-1': 'emerging' }, 'female');
+  assert.ok(plan.every((activity) => !/احتياجه(?!ا)|نظره(?!ا)|واديه(?!ا)|يساعديه(?!ا)|\bيتحرك\b|\bيقدر\b/.test(activity.instruction.ar)));
+  const html = generateReportHtml({
+    profile: { name: 'خديجة', birthDateISO: '2025-03-01', gender: 'female' }, ageMonths: 18, lang: 'ar',
+    milestoneStatuses: { 'ms-m18-1': 'emerging', 'ms-m18-2-v2': 'achieved' }, observations: [], generatedAt: new Date('2026-09-09T12:00:00.000Z'),
+  });
+  assert.match(html, /<b>الطفلة:<\/b> خديجة/);
+  assert.match(html, /تمشي بمفردها/);
+  assert.match(html, /بتحاول/);
+  assert.doesNotMatch(html, /الطفل:<\/b> خديجة|بيحاول|بمفرده(?!ا)/);
+});
